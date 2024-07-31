@@ -4,11 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "generate:dev": "dotenv -e backend/.env prisma generate --schema=backend/prisma/schema.prisma",
-    "migrate:dev": "dotenv -e backend/.env prisma migrate dev --schema=backend/prisma/schema.prisma",
-    "generate:test": "dotenv -e backend/.env.test prisma generate --schema=backend/prisma/schema.prisma",
-    "migrate:test": "dotenv -e backend/.env.test prisma migrate dev --schema=backend/prisma/schema.prisma --name init",
-    "test:backend": "dotenv -e backend/.env.test jest --config backend/jest.config.js"
+    "generate:dev": "dotenv -e backend/.env -- prisma generate --schema=backend/prisma/schema.prisma",
+    "migrate:dev": "dotenv -e backend/.env -- prisma migrate dev --schema=backend/prisma/schema.prisma --name add_new_models",
+    "generate:test": "dotenv -e backend/.env.test -- prisma generate --schema=backend/prisma/schema.prisma",
+    "migrate:test": "dotenv -e backend/.env.test -- prisma migrate dev --schema=backend/prisma/schema.prisma --name init",
+    "test:backend": "dotenv -e backend/.env.test -- jest --config backend/jest.config.js"
+  },
+  "prisma": {
+    "schema": "./backend/prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",
