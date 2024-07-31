@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "ProductImage" ALTER COLUMN "updatedAt" SET DEFAULT CURRENT_TIMESTAMP;
-
--- AlterTable
-ALTER TABLE "ProductVariant" ALTER COLUMN "updatedAt" SET DEFAULT CURRENT_TIMESTAMP;

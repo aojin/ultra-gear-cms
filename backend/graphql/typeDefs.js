@@ -239,6 +239,9 @@ const typeDefs = gql`
     createCategory(name: String!, description: String): Category!
     updateCategory(id: ID!, name: String, description: String): Category!
     deleteCategory(id: ID!): Category!
+    createSubCategory(name: String!, categoryId: ID!): SubCategory!
+    updateSubCategory(id: ID!, name: String, categoryId: ID): SubCategory!
+    deleteSubCategory(id: ID!): SubCategory!
     createUser(email: String!, password: String!, name: String): User!
     updateUser(id: ID!, email: String, password: String, name: String): User!
     deleteUser(id: ID!): User!

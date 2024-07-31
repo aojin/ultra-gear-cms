@@ -8,7 +8,10 @@
     "migrate:dev": "dotenv -e backend/.env -- prisma migrate dev --schema=backend/prisma/schema.prisma --name add_new_models",
     "generate:test": "dotenv -e backend/.env.test -- prisma generate --schema=backend/prisma/schema.prisma",
     "migrate:test": "dotenv -e backend/.env.test -- prisma migrate dev --schema=backend/prisma/schema.prisma --name init",
-    "test:backend": "dotenv -e backend/.env.test -- jest --config backend/jest.config.js"
+    "initialize": "node initialize.js",
+    "test:backend": "dotenv -e backend/.env.test -- jest --config backend/jest.config.js",
+    "studio:dev": "dotenv -e backend/.env -- prisma studio --schema=backend/prisma/schema.prisma",
+    "studio:test": "dotenv -e backend/.env.test -- prisma studio --schema=backend/prisma/schema.prisma"
   },
   "prisma": {
     "schema": "./backend/prisma/schema.prisma"

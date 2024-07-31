@@ -1,112 +1,75 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const calculateCurrentPrice = async (productId, productVariantId) => {
+  const sales = await prisma.sale.findMany({
+    where: {
+      OR: [
+        { products: { some: { id: productId } } },
+        { variants: { some: { id: productVariantId } } },
+      ],
+      archived: false,
+      startDate: { lte: new Date() },
+      endDate: { gte: new Date() },
+    },
+    include: { promoCodes: true },
+  });
+
+  let bestSale = null;
+  let bestDiscount = 0;
+
+  sales.forEach((sale) => {
+    const discount = sale.salePercentage
+      ? sale.salePercentage / 100
+      : sale.saleAmount;
+    if (discount > bestDiscount) {
+      bestDiscount = discount;
+      bestSale = sale;
+    }
+  });
+
+  if (!bestSale) return null;
+
+  let msrpPrice = productVariantId
+    ? (
+        await prisma.productVariant.findUnique({
+          where: { id: productVariantId },
+        })
+      ).msrpPrice
+    : (await prisma.product.findUnique({ where: { id: productId } })).msrpPrice;
+
+  const currentPrice = bestSale.salePercentage
+    ? msrpPrice * (1 - bestSale.salePercentage / 100)
+    : msrpPrice - bestSale.saleAmount;
+
+  return Math.max(currentPrice, 0);
+};
+
 const resolvers = {
   Query: {
     products: async () => {
-      const products = await prisma.product.findMany({
-        include: {
-          images: true,
-          variants: {
-            include: {
-              images: true,
-            },
-          },
-        },
-      });
-
-      const activePackages = await prisma.package.findMany({
-        where: { archived: false },
-        include: {
-          products: true,
-        },
-      });
-
-      const productPackageVariantsMap = {};
-
-      activePackages.forEach((pkg) => {
-        pkg.products.forEach((product) => {
-          if (!productPackageVariantsMap[product.id]) {
-            productPackageVariantsMap[product.id] = [];
-          }
-          productPackageVariantsMap[product.id].push({
-            id: `package-${pkg.id}`,
-            name: `Package: ${pkg.name}`,
-            msrpPrice: pkg.price,
-            currentPrice: pkg.salePrice || pkg.price,
-            productId: product.id,
-            product,
-            isSingleSize: true,
-            quantity: null,
-            sizes: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            archived: false,
-            images: [],
-            sales: [],
-            stockStatus: "IN_STOCK",
-          });
-        });
-      });
-
-      products.forEach((product) => {
-        if (productPackageVariantsMap[product.id]) {
-          product.variants.push(...productPackageVariantsMap[product.id]);
-        }
-      });
-
-      return products;
+      return await prisma.product.findMany();
     },
     product: async (_, args) => {
-      const product = await prisma.product.findUnique({
+      return await prisma.product.findUnique({
         where: { id: Number(args.id) },
         include: {
           images: true,
-          variants: {
-            include: {
-              images: true,
-            },
-          },
+          variants: true,
+          reviews: true,
+          inventory: true,
+          sales: true,
+          categories: true,
+          subcategories: true,
+          sizes: true,
         },
       });
-
-      const activePackages = await prisma.package.findMany({
-        where: {
-          archived: false,
-          products: {
-            some: {
-              id: product.id,
-            },
-          },
-        },
-      });
-
-      const packageVariants = activePackages.map((pkg) => ({
-        id: `package-${pkg.id}`,
-        name: `Package: ${pkg.name}`,
-        msrpPrice: pkg.price,
-        currentPrice: pkg.salePrice || pkg.price,
-        productId: product.id,
-        product,
-        isSingleSize: true,
-        quantity: null,
-        sizes: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        archived: false,
-        images: [],
-        sales: [],
-        stockStatus: "IN_STOCK",
-      }));
-
-      product.variants.push(...packageVariants);
-
-      return product;
     },
     categories: async () => {
       return await prisma.category.findMany({
         include: {
           subcategories: true,
+          products: true,
         },
       });
     },
@@ -114,8 +77,8 @@ const resolvers = {
       return await prisma.category.findUnique({
         where: { id: Number(args.id) },
         include: {
-          products: true,
           subcategories: true,
+          products: true,
         },
       });
     },
@@ -125,6 +88,15 @@ const resolvers = {
     user: async (_, args) => {
       return await prisma.user.findUnique({
         where: { id: Number(args.id) },
+        include: {
+          orders: true,
+          reviews: true,
+          cart: {
+            include: {
+              items: true,
+            },
+          },
+        },
       });
     },
     orders: async () => {
@@ -133,51 +105,50 @@ const resolvers = {
     order: async (_, args) => {
       return await prisma.order.findUnique({
         where: { id: Number(args.id) },
+        include: {
+          orderItems: true,
+          user: true,
+        },
       });
     },
   },
   Mutation: {
     createProduct: async (_, args) => {
+      const { imageUrls, categoryIds, ...data } = args;
       const product = await prisma.product.create({
         data: {
-          name: args.name,
-          description: args.description,
-          msrpPrice: args.msrpPrice,
-          brand: args.brand,
-          model: args.model,
+          ...data,
           images: {
-            create: args.imageUrls.map((url, index) => ({ url, order: index })),
+            create: imageUrls.map((url, index) => ({ url, order: index })),
           },
           categories: {
-            connect: args.categoryIds.map((id) => ({ id: Number(id) })),
+            connect: categoryIds.map((id) => ({ id: Number(id) })),
           },
         },
         include: {
           images: true,
+          categories: true,
         },
       });
       return product;
     },
     updateProduct: async (_, args) => {
+      const { id, imageUrls, categoryIds, ...data } = args;
       const product = await prisma.product.update({
-        where: { id: Number(args.id) },
+        where: { id: Number(id) },
         data: {
-          name: args.name,
-          description: args.description,
-          msrpPrice: args.msrpPrice,
-          brand: args.brand,
-          model: args.model,
+          ...data,
           images: {
             deleteMany: {},
-            create: args.imageUrls.map((url, index) => ({ url, order: index })),
+            create: imageUrls.map((url, index) => ({ url, order: index })),
           },
           categories: {
-            set: [],
-            connect: args.categoryIds.map((id) => ({ id: Number(id) })),
+            set: categoryIds.map((id) => ({ id: Number(id) })),
           },
         },
         include: {
           images: true,
+          categories: true,
         },
       });
       return product;
@@ -188,15 +159,12 @@ const resolvers = {
       });
     },
     createProductVariant: async (_, args) => {
+      const { imageUrls, ...data } = args;
       const productVariant = await prisma.productVariant.create({
         data: {
-          productId: Number(args.productId),
-          name: args.name,
-          msrpPrice: args.msrpPrice,
-          isSingleSize: args.isSingleSize,
-          quantity: args.quantity,
+          ...data,
           images: {
-            create: args.imageUrls.map((url, index) => ({ url, order: index })),
+            create: imageUrls.map((url, index) => ({ url, order: index })),
           },
         },
         include: {
@@ -206,16 +174,14 @@ const resolvers = {
       return productVariant;
     },
     updateProductVariant: async (_, args) => {
+      const { id, imageUrls, ...data } = args;
       const productVariant = await prisma.productVariant.update({
-        where: { id: Number(args.id) },
+        where: { id: Number(id) },
         data: {
-          name: args.name,
-          msrpPrice: args.msrpPrice,
-          isSingleSize: args.isSingleSize,
-          quantity: args.quantity,
+          ...data,
           images: {
             deleteMany: {},
-            create: args.imageUrls.map((url, index) => ({ url, order: index })),
+            create: imageUrls.map((url, index) => ({ url, order: index })),
           },
         },
         include: {
@@ -247,16 +213,35 @@ const resolvers = {
       });
     },
     deleteCategory: async (_, args) => {
-      const category = await prisma.category.findUnique({
-        where: { id: Number(args.id) },
-        include: { products: true },
-      });
-
-      if (category.products.length > 0) {
-        throw new Error("Category has products and cannot be deleted");
-      }
-
       return await prisma.category.delete({
+        where: { id: Number(args.id) },
+      });
+    },
+    createSubCategory: async (_, args) => {
+      return await prisma.subCategory.create({
+        data: {
+          name: args.name,
+          description: args.description,
+          category: {
+            connect: { id: Number(args.categoryId) },
+          },
+        },
+      });
+    },
+    updateSubCategory: async (_, args) => {
+      return await prisma.subCategory.update({
+        where: { id: Number(args.id) },
+        data: {
+          name: args.name,
+          description: args.description,
+          category: {
+            connect: { id: Number(args.categoryId) },
+          },
+        },
+      });
+    },
+    deleteSubCategory: async (_, args) => {
+      return await prisma.subCategory.delete({
         where: { id: Number(args.id) },
       });
     },
@@ -287,7 +272,9 @@ const resolvers = {
     createOrder: async (_, args) => {
       return await prisma.order.create({
         data: {
-          userId: Number(args.userId),
+          user: {
+            connect: { id: Number(args.userId) },
+          },
           totalAmount: args.totalAmount,
         },
       });
@@ -308,8 +295,12 @@ const resolvers = {
     createReview: async (_, args) => {
       return await prisma.review.create({
         data: {
-          userId: Number(args.userId),
-          productId: Number(args.productId),
+          user: {
+            connect: { id: Number(args.userId) },
+          },
+          product: {
+            connect: { id: Number(args.productId) },
+          },
           rating: args.rating,
           comment: args.comment,
         },
@@ -332,11 +323,19 @@ const resolvers = {
     createCartItem: async (_, args) => {
       return await prisma.cartItem.create({
         data: {
-          cartId: Number(args.cartId),
-          productId: Number(args.productId),
-          variantId: args.variantId ? Number(args.variantId) : null,
-          sizeId: args.sizeId ? Number(args.sizeId) : null,
-          cartQuantity: args.cartQuantity,
+          cart: {
+            connect: { id: Number(args.cartId) },
+          },
+          product: {
+            connect: { id: Number(args.productId) },
+          },
+          quantity: args.quantity,
+          size: args.sizeId
+            ? { connect: { id: Number(args.sizeId) } }
+            : undefined,
+          variant: args.variantId
+            ? { connect: { id: Number(args.variantId) } }
+            : undefined,
           currentPrice: args.currentPrice,
         },
       });
@@ -345,7 +344,7 @@ const resolvers = {
       return await prisma.cartItem.update({
         where: { id: Number(args.id) },
         data: {
-          cartQuantity: args.cartQuantity,
+          quantity: args.quantity,
         },
       });
     },
@@ -357,8 +356,12 @@ const resolvers = {
     createInventory: async (_, args) => {
       return await prisma.inventory.create({
         data: {
-          productId: args.productId ? Number(args.productId) : null,
-          variantId: args.variantId ? Number(args.variantId) : null,
+          product: args.productId
+            ? { connect: { id: Number(args.productId) } }
+            : undefined,
+          variant: args.variantId
+            ? { connect: { id: Number(args.variantId) } }
+            : undefined,
           quantity: args.quantity,
         },
       });
@@ -414,7 +417,9 @@ const resolvers = {
           code: args.code,
           validFrom: args.validFrom,
           validTo: args.validTo,
-          saleId: Number(args.saleId),
+          sale: {
+            connect: { id: Number(args.saleId) },
+          },
         },
       });
     },
@@ -453,8 +458,7 @@ const resolvers = {
           description: args.description,
           price: args.price,
           products: {
-            set: [],
-            connect: args.products.map((id) => ({ id: Number(id) })),
+            set: args.products.map((id) => ({ id: Number(id) })),
           },
         },
       });
@@ -466,45 +470,203 @@ const resolvers = {
     },
   },
   Product: {
-    stockStatus: async (parent) => {
-      if (parent.isSingleSize) {
-        return parent.quantity > 5
-          ? "IN_STOCK"
-          : parent.quantity > 0
-          ? "LOW_STOCK"
-          : "OUT_OF_STOCK";
-      } else {
-        const totalQuantity = parent.sizes.reduce(
-          (acc, size) => acc + size.quantity,
-          0
-        );
-        return totalQuantity > 5
-          ? "IN_STOCK"
-          : totalQuantity > 0
-          ? "LOW_STOCK"
-          : "OUT_OF_STOCK";
-      }
+    currentPrice: async (parent) => {
+      return await calculateCurrentPrice(parent.id, null);
+    },
+    images: async (parent) => {
+      return await prisma.productImage.findMany({
+        where: { productId: parent.id },
+      });
+    },
+    variants: async (parent) => {
+      return await prisma.productVariant.findMany({
+        where: { productId: parent.id },
+      });
+    },
+    reviews: async (parent) => {
+      return await prisma.review.findMany({
+        where: { productId: parent.id },
+      });
+    },
+    inventory: async (parent) => {
+      return await prisma.inventory.findMany({
+        where: { productId: parent.id },
+      });
+    },
+    sales: async (parent) => {
+      return await prisma.sale.findMany({
+        where: { products: { some: { id: parent.id } } },
+      });
+    },
+    categories: async (parent) => {
+      return await prisma.category.findMany({
+        where: { products: { some: { id: parent.id } } },
+      });
+    },
+    subcategories: async (parent) => {
+      return await prisma.subCategory.findMany({
+        where: { products: { some: { id: parent.id } } },
+      });
+    },
+    sizes: async (parent) => {
+      return await prisma.size.findMany({
+        where: { productId: parent.id },
+      });
     },
   },
   ProductVariant: {
-    stockStatus: async (parent) => {
-      if (parent.isSingleSize) {
-        return parent.quantity > 5
-          ? "IN_STOCK"
-          : parent.quantity > 0
-          ? "LOW_STOCK"
-          : "OUT_OF_STOCK";
-      } else {
-        const totalQuantity = parent.sizes.reduce(
-          (acc, size) => acc + size.quantity,
-          0
-        );
-        return totalQuantity > 5
-          ? "IN_STOCK"
-          : totalQuantity > 0
-          ? "LOW_STOCK"
-          : "OUT_OF_STOCK";
-      }
+    currentPrice: async (parent) => {
+      return await calculateCurrentPrice(null, parent.id);
+    },
+    images: async (parent) => {
+      return await prisma.productImage.findMany({
+        where: { productVariantId: parent.id },
+      });
+    },
+    sales: async (parent) => {
+      return await prisma.sale.findMany({
+        where: { variants: { some: { id: parent.id } } },
+      });
+    },
+    sizes: async (parent) => {
+      return await prisma.size.findMany({
+        where: { variantId: parent.id },
+      });
+    },
+  },
+  User: {
+    orders: async (parent) => {
+      return await prisma.order.findMany({
+        where: { userId: parent.id },
+      });
+    },
+    reviews: async (parent) => {
+      return await prisma.review.findMany({
+        where: { userId: parent.id },
+      });
+    },
+    cart: async (parent) => {
+      return await prisma.cart.findUnique({
+        where: { userId: parent.id },
+      });
+    },
+  },
+  Order: {
+    user: async (parent) => {
+      return await prisma.user.findUnique({
+        where: { id: parent.userId },
+      });
+    },
+    orderItems: async (parent) => {
+      return await prisma.orderItem.findMany({
+        where: { orderId: parent.id },
+      });
+    },
+  },
+  OrderItem: {
+    order: async (parent) => {
+      return await prisma.order.findUnique({
+        where: { id: parent.orderId },
+      });
+    },
+    product: async (parent) => {
+      return await prisma.product.findUnique({
+        where: { id: parent.productId },
+      });
+    },
+    variant: async (parent) => {
+      return await prisma.productVariant.findUnique({
+        where: { id: parent.variantId },
+      });
+    },
+  },
+  Review: {
+    user: async (parent) => {
+      return await prisma.user.findUnique({
+        where: { id: parent.userId },
+      });
+    },
+    product: async (parent) => {
+      return await prisma.product.findUnique({
+        where: { id: parent.productId },
+      });
+    },
+  },
+  Cart: {
+    user: async (parent) => {
+      return await prisma.user.findUnique({
+        where: { id: parent.userId },
+      });
+    },
+    items: async (parent) => {
+      return await prisma.cartItem.findMany({
+        where: { cartId: parent.id },
+      });
+    },
+  },
+  CartItem: {
+    cart: async (parent) => {
+      return await prisma.cart.findUnique({
+        where: { id: parent.cartId },
+      });
+    },
+    product: async (parent) => {
+      return await prisma.product.findUnique({
+        where: { id: parent.productId },
+      });
+    },
+    size: async (parent) => {
+      return await prisma.size.findUnique({
+        where: { id: parent.sizeId },
+      });
+    },
+    variant: async (parent) => {
+      return await prisma.productVariant.findUnique({
+        where: { id: parent.variantId },
+      });
+    },
+  },
+  Inventory: {
+    product: async (parent) => {
+      return await prisma.product.findUnique({
+        where: { id: parent.productId },
+      });
+    },
+    variant: async (parent) => {
+      return await prisma.productVariant.findUnique({
+        where: { id: parent.variantId },
+      });
+    },
+  },
+  Sale: {
+    products: async (parent) => {
+      return await prisma.product.findMany({
+        where: { sales: { some: { id: parent.id } } },
+      });
+    },
+    variants: async (parent) => {
+      return await prisma.productVariant.findMany({
+        where: { sales: { some: { id: parent.id } } },
+      });
+    },
+    promoCodes: async (parent) => {
+      return await prisma.promoCode.findMany({
+        where: { saleId: parent.id },
+      });
+    },
+  },
+  PromoCode: {
+    sale: async (parent) => {
+      return await prisma.sale.findUnique({
+        where: { id: parent.saleId },
+      });
+    },
+  },
+  Package: {
+    products: async (parent) => {
+      return await prisma.product.findMany({
+        where: { packages: { some: { id: parent.id } } },
+      });
     },
   },
 };
