@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id             Int              @id @default(autoincrement())
+  name           String
+  description    String
+  price          Float
+  originalPrice  Float?
+  onSale         Boolean          @default(false)
+  salePercentage Float?
+  imageUrl       String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now())
+  variants       ProductVariant[]
+  categoryId     Int?
+  category       Category?        @relation(fields: [categoryId], references: [id])
+  orderItems     OrderItem[]
+  reviews        Review[]
+  cartItems      CartItem[]
+  images         ProductImage[]
+  inventory      Inventory[]
+}
+
+model ProductVariant {
+  id        Int              @id @default(autoincrement())
+  color     String
+  size      String
+  quantity  Int
+  productId Int
+  product   Product          @relation(fields: [productId], references: [id])
+  images    ProductImage[]
+  orderItems OrderItem[]
+  cartItems CartItem[]
+  inventory Inventory[]
+}
+
+model ProductImage {
+  id            Int             @id @default(autoincrement())
+  url           String
+  productVariantId Int?
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
+  productId     Int?
+  product       Product?        @relation(fields: [productId], references: [id])
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @default(now())
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  products  Product[]
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  orders    Order[]
+  reviews   Review[]
+  cart      Cart?
+}
+
+model Order {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  totalAmount Float
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  orderItems  OrderItem[]
+}
+
+model OrderItem {
+  id          Int          @id @default(autoincrement())
+  orderId     Int
+  order       Order        @relation(fields: [orderId], references: [id])
+  productId   Int
+  product     Product      @relation(fields: [productId], references: [id])
+  variantId   Int?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity    Int
+  price       Float
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now())
+}
+
+model Review {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  rating      Int
+  comment     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+}
+
+model Cart {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique
+  user        User      @relation(fields: [userId], references: [id])
+  items       CartItem[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+}
+
+model CartItem {
+  id          Int          @id @default(autoincrement())
+  cartId      Int
+  cart        Cart         @relation(fields: [cartId], references: [id])
+  productId   Int
+  product     Product      @relation(fields: [productId], references: [id])
+  variantId   Int?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity    Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now())
+}
+
+model Inventory {
+  id          Int          @id @default(autoincrement())
+  productId   Int
+  product     Product      @relation(fields: [productId], references: [id])
+  variantId   Int?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity    Int
+  updatedAt   DateTime     @default(now())
+}
