@@ -1,11 +1,25 @@
-// backend/controllers/inventoryController.js
-const prisma = require("../prisma/prismaClient");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 exports.createInventory = async (req, res) => {
   try {
-    const inventory = await prisma.inventory.create({ data: req.body });
-    res.json(inventory);
+    const { quantity, productId } = req.body;
+
+    if (!quantity || !productId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const inventory = await prisma.inventory.create({
+      data: {
+        quantity,
+        product: {
+          connect: { id: productId },
+        },
+      },
+    });
+    res.status(201).json(inventory); // 201 Created
   } catch (error) {
+    console.error("Error creating inventory:", error); // Log the error
     res.status(500).json({ error: error.message });
   }
 };
@@ -13,33 +27,50 @@ exports.createInventory = async (req, res) => {
 exports.getAllInventories = async (req, res) => {
   try {
     const inventories = await prisma.inventory.findMany();
-    res.json(inventories);
+    res.status(200).json(inventories);
   } catch (error) {
+    console.error("Error fetching inventories:", error); // Log the error
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getInventoryById = async (req, res) => {
+  try {
+    const inventory = await prisma.inventory.findUnique({
+      where: { id: parseInt(req.params.id, 10) },
+    });
+    if (inventory) {
+      res.status(200).json(inventory);
+    } else {
+      res.status(404).json({ error: "Inventory not found" });
+    }
+  } catch (error) {
+    console.error("Error fetching inventory:", error); // Log the error
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.updateInventory = async (req, res) => {
-  const { id } = req.params;
   try {
     const inventory = await prisma.inventory.update({
-      where: { id: parseInt(id, 10) },
+      where: { id: parseInt(req.params.id, 10) },
       data: req.body,
     });
-    res.json(inventory);
+    res.status(200).json(inventory);
   } catch (error) {
+    console.error("Error updating inventory:", error); // Log the error
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.deleteInventory = async (req, res) => {
-  const { id } = req.params;
   try {
-    const inventory = await prisma.inventory.delete({
-      where: { id: parseInt(id, 10) },
+    await prisma.inventory.delete({
+      where: { id: parseInt(req.params.id, 10) },
     });
-    res.json(inventory);
+    res.status(204).end(); // 204 No Content
   } catch (error) {
+    console.error("Error deleting inventory:", error); // Log the error
     res.status(500).json({ error: error.message });
   }
 };

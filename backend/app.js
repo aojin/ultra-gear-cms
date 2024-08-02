@@ -8,8 +8,13 @@ const cartItemRoutes = require("./routes/cartItemRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const subCategoryRoutes = require("./routes/subcategoryRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const orderItemRoutes = require("./routes/orderItemRoutes");
+const promoCodeRoutes = require("./routes/promoCodeRoutes");
+const packageRouter = require("./routes/packageRoutes");
+const saleRoutes = require("./routes/saleRoutes");
+const sizeRoutes = require("./routes/sizeRoutes");
 
 const app = express();
 app.use(express.json());
@@ -24,7 +29,12 @@ app.use("/api/cart-items", cartItemRoutes);
 app.use("/api/inventories", inventoryRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/order-items", orderItemRoutes);
+app.use("/api/promo-codes", promoCodeRoutes);
+app.use("/api/packages", packageRouter);
+app.use("/api/sales", saleRoutes);
+app.use("/api/sizes", sizeRoutes);
 
 module.exports = app;

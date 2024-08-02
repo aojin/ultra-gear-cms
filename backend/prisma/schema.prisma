@@ -30,7 +30,6 @@ model Product {
   isSingleSize   Boolean           @default(false)
   quantity       Int?
   packages       Package[]         @relation("ProductPackages")
-  orderItems     OrderItem[]
   cartItems      CartItem[]
 }
 
@@ -40,7 +39,7 @@ model ProductVariant {
   msrpPrice      Float
   currentPrice   Float             @default(0.0)
   productId      Int
-  product        Product           @relation(fields: [productId], references: [id])
+  product        Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
   isSingleSize   Boolean           @default(false)
   quantity       Int?
   sizes          Size[]
@@ -49,7 +48,6 @@ model ProductVariant {
   archived       Boolean           @default(false)
   images         ProductImage[]
   sales          Sale[]            @relation("VariantSales")
-  orderItems     OrderItem[]
   cartItems      CartItem[]
   inventory      Inventory[]
 }
@@ -59,12 +57,14 @@ model Size {
   size           String
   quantity       Int
   productId      Int?
-  product        Product?          @relation(fields: [productId], references: [id])
+  product        Product?          @relation(fields: [productId], references: [id], onDelete: Cascade)
   variantId      Int?
-  variant        ProductVariant?   @relation(fields: [variantId], references: [id])
+  variant        ProductVariant?   @relation(fields: [variantId], references: [id], onDelete: Cascade)
   createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  cartItems      CartItem[]
+  updatedAt      DateTime          @default(now())
+  archived       Boolean           @default(false)
+  cartItems      CartItem[]        // Add this back-reference
+  inventories    Inventory[]       // Add this back-reference
 }
 
 model ProductImage {
@@ -72,11 +72,12 @@ model ProductImage {
   url            String
   order          Int
   productVariantId Int?
-  productVariant ProductVariant?   @relation(fields: [productVariantId], references: [id])
+  productVariant ProductVariant?   @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
   productId      Int?
-  product        Product?          @relation(fields: [productId], references: [id])
+  product        Product?          @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @default(now())
+  archived       Boolean           @default(false)
 }
 
 model Category {
@@ -92,7 +93,7 @@ model SubCategory {
   name           String
   description    String?
   categoryId     Int
-  category       Category          @relation(fields: [categoryId], references: [id])
+  category       Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products       Product[]         @relation("ProductSubCategories")
 }
 
@@ -101,53 +102,63 @@ model User {
   email          String           @unique
   password       String
   name           String?
+  address1       String?
+  address2       String?
+  phoneNumber    String?
   createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  orders         Order[]
-  reviews        Review[]
+  updatedAt      DateTime          @default(now())
+  archived       Boolean           @default(false)
   cart           Cart?
 }
 
-model Order {
-  id             Int              @id @default(autoincrement())
-  userId         Int
-  user           User             @relation(fields: [userId], references: [id])
-  totalAmount    Float
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @default(now())
-  orderItems     OrderItem[]
+model OrderItem {
+  id                 Int              @id @default(autoincrement())
+  orderId            Int
+  order              Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId          Int?
+  productName        String           // Store product name
+  productVariantId   Int?
+  productVariantName String?          // Store product variant name (optional)
+  quantity           Int
+  price              Float
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @default(now())
+  archived           Boolean           @default(false)
 }
 
-model OrderItem {
-  id             Int              @id @default(autoincrement())
-  orderId        Int
-  order          Order            @relation(fields: [orderId], references: [id])
-  productId      Int
-  product        Product          @relation(fields: [productId], references: [id])
-  variantId      Int?
-  variant        ProductVariant?  @relation(fields: [variantId], references: [id])
-  quantity       Int
-  price          Float
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @default(now())
+model Order {
+  id               Int              @id @default(autoincrement())
+  userId           Int?             
+  userName         String?          
+  userEmail        String?          
+  userAddress1     String?          
+  userAddress2     String?          
+  userPhoneNumber  String?         
+  totalAmount      Float
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @default(now())
+  archived         Boolean           @default(false)
+  orderItems       OrderItem[]
 }
 
 model Review {
   id             Int              @id @default(autoincrement())
-  userId         Int
-  user           User             @relation(fields: [userId], references: [id])
+  userName       String
+  userEmail      String
+  userId         Int?
   productId      Int
-  product        Product          @relation(fields: [productId], references: [id])
+  product        Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   rating         Float
   comment        String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @default(now())
+  archived       Boolean           @default(false)
 }
 
 model Cart {
   id             Int              @id @default(autoincrement())
   userId         Int              @unique
-  user           User             @relation(fields: [userId], references: [id])
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   items          CartItem[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @default(now())
@@ -156,7 +167,7 @@ model Cart {
 model CartItem {
   id             Int              @id @default(autoincrement())
   cartId         Int
-  cart           Cart             @relation(fields: [cartId], references: [id])
+  cart           Cart             @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId      Int
   product        Product          @relation(fields: [productId], references: [id])
   variantId      Int?
@@ -170,13 +181,15 @@ model CartItem {
 }
 
 model Inventory {
-  id             Int              @id @default(autoincrement())
-  productId      Int?
-  product        Product?          @relation(fields: [productId], references: [id])
-  variantId      Int?
-  variant        ProductVariant?   @relation(fields: [variantId], references: [id])
-  quantity       Int
-  updatedAt      DateTime          @default(now())
+  id          Int              @id @default(autoincrement())
+  productId   Int?
+  product     Product?         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId   Int?
+  variant     ProductVariant?  @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  sizeId      Int?
+  size        Size?            @relation(fields: [sizeId], references: [id])
+  quantity    Int
+  updatedAt   DateTime         @default(now())
 }
 
 model Sale {
@@ -200,7 +213,7 @@ model PromoCode {
   validFrom      DateTime
   validTo        DateTime
   saleId         Int
-  sale           Sale             @relation(fields: [saleId], references: [id])
+  sale           Sale             @relation(fields: [saleId], references: [id], onDelete: Cascade)
 }
 
 model Package {

@@ -1,5 +1,6 @@
 module.exports = {
   testEnvironment: "node",
-  testMatch: ["**/backend/tests/**/*.test.js"],
-  setupFiles: ["dotenv/config"],
+  testMatch: ["**/tests/**/*.test.js"],
+  setupFiles: ["<rootDir>/jest.setup.js"], // Path to the setup file
+  globalTeardown: "<rootDir>/jest.global-teardown.js", // Optional: if you use global teardown
 };

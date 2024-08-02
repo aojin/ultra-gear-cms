@@ -1,16 +1,11 @@
 const prisma = require("../prisma/prismaClient");
 
 exports.createCartItem = async (req, res) => {
-  const { cartId, productId, quantity } = req.body;
   try {
     const cartItem = await prisma.cartItem.create({
-      data: {
-        cartId,
-        productId,
-        quantity,
-      },
+      data: req.body,
     });
-    res.status(200).json(cartItem);
+    res.status(201).json(cartItem);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -27,11 +22,10 @@ exports.getAllCartItems = async (req, res) => {
 
 exports.updateCartItem = async (req, res) => {
   const { id } = req.params;
-  const { quantity } = req.body;
   try {
     const cartItem = await prisma.cartItem.update({
-      where: { id: Number(id) },
-      data: { quantity },
+      where: { id: parseInt(id, 10) },
+      data: req.body,
     });
     res.status(200).json(cartItem);
   } catch (error) {
@@ -42,10 +36,10 @@ exports.updateCartItem = async (req, res) => {
 exports.deleteCartItem = async (req, res) => {
   const { id } = req.params;
   try {
-    const cartItem = await prisma.cartItem.delete({
-      where: { id: Number(id) },
+    await prisma.cartItem.delete({
+      where: { id: parseInt(id, 10) },
     });
-    res.status(200).json(cartItem);
+    res.status(204).end();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
