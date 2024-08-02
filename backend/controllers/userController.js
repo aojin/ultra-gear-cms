@@ -1,4 +1,3 @@
-// backend/controllers/userController.js
 const prisma = require("../prisma/prismaClient");
 
 exports.createUser = async (req, res) => {
@@ -25,9 +24,6 @@ exports.getUserById = async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: parseInt(id, 10) },
     });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -57,7 +53,6 @@ exports.archiveUser = async (req, res) => {
     res.status(200).json(user); // Ensure proper status code
   } catch (error) {
     if (error.code === "P2025") {
-      // Prisma specific error for not found
       res.status(404).json({ error: "User not found" });
     } else {
       res.status(500).json({ error: error.message });
@@ -78,6 +73,18 @@ exports.permanentlyDeleteUser = async (req, res) => {
     } else {
       res.status(500).json({ error: error.message });
     }
+  }
+};
+
+exports.getOrdersByUserId = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const orders = await prisma.order.findMany({
+      where: { userId: parseInt(userId, 10) },
+    });
+    res.status(200).json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 
