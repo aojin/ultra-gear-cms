@@ -9,7 +9,7 @@ import {
   archiveSizeHandler, // POST /:id/archive - Archive a size
   unarchiveSizeHandler, // POST /:id/unarchive - Unarchive a size
   deleteSizeHandler, // DELETE /:id - Delete a size
-} from "../controllers/sizeController.js";
+} from "../controllers/sizeController";
 
 const router = express.Router();
 

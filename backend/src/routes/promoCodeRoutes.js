@@ -5,7 +5,7 @@ import {
   getAllPromoCodesHandler,
   updatePromoCodeHandler,
   deletePromoCodeHandler,
-} from "../controllers/promoCodeController.js";
+} from "../controllers/promoCodeController";
 
 const router = express.Router();
 

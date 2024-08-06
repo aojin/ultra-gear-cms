@@ -5,8 +5,9 @@ import {
   getOrderByIdHandler,
   updateOrderHandler,
   archiveOrderHandler,
+  unarchiveOrderHandler,
   permanentlyDeleteOrderHandler,
-} from "../controllers/orderController.js";
+} from "../controllers/orderController";
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.get("/:id", getOrderByIdHandler);
 router.put("/:id", updateOrderHandler);
 router.put("/archive/:id", archiveOrderHandler);
 router.delete("/:id", permanentlyDeleteOrderHandler);
+router.put("/unarchive/:id", unarchiveOrderHandler);
 
 export default router;

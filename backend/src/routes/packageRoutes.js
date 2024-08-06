@@ -4,7 +4,7 @@ import {
   getAllPackagesHandler,
   updatePackageHandler,
   deletePackageHandler,
-} from "../controllers/packageController.js";
+} from "../controllers/packageController";
 
 const router = express.Router();
 

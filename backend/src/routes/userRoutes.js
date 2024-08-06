@@ -9,7 +9,7 @@ import {
   getOrdersByUserIdHandler,
   getAllUserCartsHandler,
   getAllUserReviewsHandler,
-} from "../controllers/userController.js";
+} from "../controllers/userController";
 
 const router = express.Router();
 

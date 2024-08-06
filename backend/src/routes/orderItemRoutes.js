@@ -7,7 +7,7 @@ import {
   updateOrderItemHandler,
   archiveOrderItemHandler,
   deleteOrderItemHandler,
-} from "../controllers/orderItemController.js";
+} from "../controllers/orderItemController";
 
 const router = express.Router();
 

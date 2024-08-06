@@ -9,7 +9,7 @@ import {
   archiveProductImageHandler,
   unarchiveProductImageHandler,
   deleteProductImageHandler,
-} from "../controllers/productImageController.js";
+} from "../controllers/productImageController";
 
 const router = express.Router();
 

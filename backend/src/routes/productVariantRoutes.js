@@ -7,7 +7,7 @@ import {
   deleteProductVariantHandler,
   archiveProductVariantHandler,
   unarchiveProductVariantHandler,
-} from "../controllers/productVariantController.js";
+} from "../controllers/productVariantController";
 
 const router = express.Router();
 

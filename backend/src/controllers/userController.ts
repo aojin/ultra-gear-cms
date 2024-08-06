@@ -11,7 +11,7 @@ import {
   getAllUserReviews,
   CreateUserInput,
   UpdateUserInput,
-} from "../services/userService.js";
+} from "../services/userService";
 
 export const createUserHandler = async (
   req: Request,

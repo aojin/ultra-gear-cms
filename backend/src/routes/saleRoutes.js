@@ -5,8 +5,7 @@ import {
   getSaleByIdHandler,
   updateSaleHandler,
   deleteSaleHandler,
-} from "../controllers/saleController.js";
-
+} from "../controllers/saleController"
 const router = express.Router();
 
 router.post("/", createSaleHandler);

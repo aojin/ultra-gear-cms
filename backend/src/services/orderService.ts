@@ -143,7 +143,7 @@ export const updateOrder = async (
   }
 };
 
-export const deleteOrder = async (id: number): Promise<Order> => {
+export const permanentlyDeleteOrder = async (id: number): Promise<Order> => {
   try {
     return await prisma.order.delete({
       where: { id },
@@ -156,6 +156,42 @@ export const deleteOrder = async (id: number): Promise<Order> => {
       );
     } else {
       throw new Error("Service Error: Failed to delete order");
+    }
+  }
+};
+
+export const archiveOrder = async (id: number): Promise<Order> => {
+  try {
+    return await prisma.order.update({
+      where: { id },
+      data: { archived: true },
+    });
+  } catch (error) {
+    console.error("Service: Error archiving order:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      throw new Error(
+        "Service Error: Unique constraint violation or other known error"
+      );
+    } else {
+      throw new Error("Service Error: Failed to archive order");
+    }
+  }
+};
+
+export const unarchiveOrder = async (id: number): Promise<Order> => {
+  try {
+    return await prisma.order.update({
+      where: { id },
+      data: { archived: false },
+    });
+  } catch (error) {
+    console.error("Service: Error unarchiving order:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      throw new Error(
+        "Service Error: Unique constraint violation or other known error"
+      );
+    } else {
+      throw new Error("Service Error: Failed to unarchive order");
     }
   }
 };

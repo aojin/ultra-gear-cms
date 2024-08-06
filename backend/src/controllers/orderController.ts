@@ -4,7 +4,9 @@ import {
   getAllOrders,
   getOrderById,
   updateOrder,
-  deleteOrder,
+  archiveOrder,
+  unarchiveOrder,
+  permanentlyDeleteOrder,
 } from "../services/orderService";
 import { Request, Response } from "express";
 
@@ -100,16 +102,44 @@ export const updateOrderHandler = async (
   }
 };
 
-export const deleteOrderHandler = async (
+export const permanentlyDeleteOrderHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
   try {
-    await deleteOrder(parseInt(id, 10));
+    await permanentlyDeleteOrder(parseInt(id, 10));
     res.status(204).send();
   } catch (error) {
-    console.error("Controller: Error deleting order:", error);
+    console.error("Controller: Error permanently deleting order:", error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
+
+export const archiveOrderHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+  try {
+    const archivedOrder = await archiveOrder(parseInt(id, 10));
+    res.status(200).json(archivedOrder);
+  } catch (error) {
+    console.error("Controller: Error archiving order:", error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
+
+export const unarchiveOrderHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+  try {
+    const unarchivedOrder = await unarchiveOrder(parseInt(id, 10));
+    res.status(200).json(unarchivedOrder);
+  } catch (error) {
+    console.error("Controller: Error unarchiving order:", error);
     res.status(500).json({ error: (error as Error).message });
   }
 };

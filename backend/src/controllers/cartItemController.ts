@@ -1,97 +1,111 @@
-import { PrismaClient, CartItem } from "@prisma/client";
-import { Prisma } from "@prisma/client";
+import { Request, Response } from "express";
+import {
+  createCartItem,
+  getAllCartItems,
+  updateCartItem,
+  deleteCartItem,
+  CreateCartItemInput,
+} from "../services/cartItemService";
 
-const prisma = new PrismaClient();
+export const createCartItemHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const {
+    cartId,
+    productId,
+    variantId,
+    sizeId,
+    cartQuantity,
+    currentPrice,
+  }: CreateCartItemInput = req.body;
 
-export interface CreateCartItemInput {
-  cartId: number;
-  productId: number;
-  variantId?: number | null;
-  sizeId?: number | null;
-  cartQuantity: number;
-  currentPrice: number;
-}
+  if (
+    !cartId ||
+    !productId ||
+    cartQuantity === undefined ||
+    currentPrice === undefined
+  ) {
+    res.status(400).json({ error: "Missing required fields" });
+    return;
+  }
 
-export const createCartItem = async (
-  data: CreateCartItemInput
-): Promise<CartItem> => {
   try {
-    return await prisma.cartItem.create({
-      data: {
-        cart: { connect: { id: data.cartId } },
-        product: { connect: { id: data.productId } },
-        variant: data.variantId
-          ? { connect: { id: data.variantId } }
-          : undefined,
-        size: data.sizeId ? { connect: { id: data.sizeId } } : undefined,
-        cartQuantity: data.cartQuantity,
-        currentPrice: data.currentPrice,
-      },
+    const cartItem = await createCartItem({
+      cartId,
+      productId,
+      variantId,
+      sizeId,
+      cartQuantity,
+      currentPrice,
     });
+    res.status(201).json(cartItem);
   } catch (error) {
-    console.error("Service: Error creating cart item:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to create cart item");
-    }
+    res.status(500).json({ error: "An error occurred creating a cart item" });
   }
 };
 
-export const getAllCartItems = async (): Promise<CartItem[]> => {
+export const getAllCartItemsHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    return await prisma.cartItem.findMany();
+    const cartItems = await getAllCartItems();
+    res.status(200).json(cartItems);
   } catch (error) {
-    console.error("Service: Error fetching cart items:", error);
-    throw new Error("Service Error: Failed to fetch cart items");
+    res.status(500).json({ error: "An error occurred fetching cart items" });
   }
 };
 
-export const updateCartItem = async (
-  id: number,
-  data: CreateCartItemInput
-): Promise<CartItem> => {
+export const updateCartItemHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+  const {
+    cartId,
+    productId,
+    variantId,
+    sizeId,
+    cartQuantity,
+    currentPrice,
+  }: CreateCartItemInput = req.body;
+
+  if (
+    !cartId ||
+    !productId ||
+    cartQuantity === undefined ||
+    currentPrice === undefined
+  ) {
+    res.status(400).json({ error: "Missing required fields" });
+    return;
+  }
+
   try {
-    return await prisma.cartItem.update({
-      where: { id },
-      data: {
-        cart: { connect: { id: data.cartId } },
-        product: { connect: { id: data.productId } },
-        variant: data.variantId
-          ? { connect: { id: data.variantId } }
-          : undefined,
-        size: data.sizeId ? { connect: { id: data.sizeId } } : undefined,
-        cartQuantity: data.cartQuantity,
-        currentPrice: data.currentPrice,
-      },
+    const cartItem = await updateCartItem(parseInt(id, 10), {
+      cartId,
+      productId,
+      variantId,
+      sizeId,
+      cartQuantity,
+      currentPrice,
     });
+    res.status(200).json(cartItem);
   } catch (error) {
-    console.error("Service: Error updating cart item:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to update cart item");
-    }
+    res.status(500).json({ error: "An error occurred updating cart item" });
   }
 };
 
-export const deleteCartItem = async (id: number): Promise<CartItem> => {
+export const deleteCartItemHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+
   try {
-    return await prisma.cartItem.delete({
-      where: { id },
-    });
+    await deleteCartItem(parseInt(id, 10));
+    res.status(204).send();
   } catch (error) {
-    console.error("Service: Error deleting cart item:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to delete cart item");
-    }
+    res.status(500).json({ error: "An error occurred deleting cart item" });
   }
 };
