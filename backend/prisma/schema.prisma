@@ -84,12 +84,13 @@ model ProductImage {
 }
 
 model Category {
-  id             Int              @id @default(autoincrement())
-  name           String
-  description    String?
-  products       Product[]         @relation("ProductCategories")
-  subcategories  SubCategory[]
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  products    Product[] @relation("ProductCategories")
+  subcategories SubCategory[]
 }
+
 
 model SubCategory {
   id             Int              @id @default(autoincrement())

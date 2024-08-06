@@ -13,11 +13,6 @@ import {
   UpdateReviewInput,
 } from "../services/reviewService";
 
-interface CustomRequest extends Request {
-  userId: number;
-  isAdmin: boolean;
-}
-
 export const createReviewHandler = async (
   req: Request,
   res: Response
@@ -58,11 +53,11 @@ export const getAllReviewsHandler = async (
 };
 
 export const updateReviewHandler = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const { userName, userEmail, userId, productId, rating, comment, archived } =
+  const { userId, userName, userEmail, productId, rating, comment, archived } =
     req.body;
 
   try {
@@ -71,7 +66,7 @@ export const updateReviewHandler = async (
       res.status(404).json({ error: "Review not found" });
       return;
     }
-    if (review.userId !== req.userId) {
+    if (review.userId !== userId) {
       res
         .status(403)
         .json({ error: "You are not authorized to update this review" });
@@ -96,11 +91,11 @@ export const updateReviewHandler = async (
 };
 
 export const archiveReviewByUserHandler = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const userId = req.userId;
+  const { userId } = req.body;
   try {
     const review = await getReviewById(parseInt(id, 10));
     if (!review) {
@@ -124,11 +119,11 @@ export const archiveReviewByUserHandler = async (
 };
 
 export const archiveReviewByAdminHandler = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const isAdmin = req.isAdmin;
+  const { isAdmin } = req.body;
   try {
     if (!isAdmin) {
       res
@@ -147,11 +142,11 @@ export const archiveReviewByAdminHandler = async (
 };
 
 export const unarchiveReviewByAdminHandler = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const isAdmin = req.isAdmin;
+  const { isAdmin } = req.body;
   try {
     if (!isAdmin) {
       res
@@ -170,11 +165,11 @@ export const unarchiveReviewByAdminHandler = async (
 };
 
 export const permanentlyDeleteReviewHandler = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const isAdmin = req.isAdmin;
+  const { isAdmin } = req.body;
   try {
     if (!isAdmin) {
       res.status(403).json({

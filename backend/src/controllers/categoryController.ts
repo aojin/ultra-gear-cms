@@ -22,8 +22,14 @@ export const createCategoryHandler = async (
     const category = await createCategory({ name, description });
     res.status(201).json(category);
   } catch (error: any) {
-    console.error("Controller: Error creating category:", error);
-    res.status(500).json({ error: error.message });
+    if (error.message.includes("Uncategorized")) {
+      res.status(400).json({ error: error.message });
+    } else if (error.message.includes("already exists")) {
+      res.status(409).json({ error: error.message });
+    } else {
+      console.error("Controller: Error creating category:", error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 
@@ -76,8 +82,14 @@ export const updateCategoryHandler = async (
     });
     res.status(200).json(category);
   } catch (error: any) {
-    console.error("Controller: Error updating category:", error);
-    res.status(500).json({ error: error.message });
+    if (error.message.includes("Uncategorized")) {
+      res.status(400).json({ error: error.message });
+    } else if (error.message.includes("already exists")) {
+      res.status(409).json({ error: error.message });
+    } else {
+      console.error("Controller: Error updating category:", error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 
@@ -90,7 +102,11 @@ export const deleteCategoryHandler = async (
     await deleteCategory(parseInt(id, 10));
     res.status(204).send();
   } catch (error: any) {
-    console.error("Controller: Error deleting category:", error);
-    res.status(500).json({ error: error.message });
+    if (error.message === "Cannot delete the Uncategorized category") {
+      res.status(400).json({ error: error.message });
+    } else {
+      console.error("Controller: Error deleting category:", error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };

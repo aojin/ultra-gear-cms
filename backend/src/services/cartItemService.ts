@@ -1,5 +1,4 @@
-import { PrismaClient, CartItem } from "@prisma/client";
-import { Prisma } from "@prisma/client";
+import { PrismaClient, CartItem, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 

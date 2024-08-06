@@ -9,9 +9,18 @@
     "outDir": "./dist",
     "baseUrl": "./backend",
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"],
+      "*": ["node_modules/*"]
+    },
+    "types": ["node", "jest"],
+    "resolveJsonModule": true
   },
-  "include": ["backend/src", "backend/graphql", "backend/prisma"],
+  "include": [
+    "backend/src",
+    "backend/graphql",
+    "backend/prisma",
+    "backend/src/**/*.ts",
+    "tests/**/*.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

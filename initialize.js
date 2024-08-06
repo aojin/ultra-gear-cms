@@ -1,42 +1,28 @@
-const { execSync } = require("child_process");
-const { PrismaClient } = require("@prisma/client");
-const dotenv = require("dotenv");
-const path = require("path");
+import { execSync } from "child_process";
+import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+import path from "path";
 
-async function applyMigrations(envFilePath) {
-  const envConfig = dotenv.config({ path: envFilePath }).parsed;
-
-  const databaseUrl = envConfig.DATABASE_URL;
-
-  console.log(`Using database URL from ${envFilePath}: ${databaseUrl}`);
+async function applyMigrations(databaseUrl, schemaPath) {
+  console.log(`Using database URL: ${databaseUrl}`);
 
   try {
-    console.log(`Applying migrations for environment: ${envFilePath}`);
-    execSync(
-      `npx prisma migrate reset --force --schema=backend/prisma/schema.prisma`,
-      {
-        stdio: "inherit",
-        env: { ...process.env, DATABASE_URL: databaseUrl },
-      }
-    );
-    execSync(
-      `npx prisma migrate deploy --schema=backend/prisma/schema.prisma`,
-      {
-        stdio: "inherit",
-        env: { ...process.env, DATABASE_URL: databaseUrl },
-      }
-    );
-    console.log(`Migrations applied successfully for ${envFilePath}.`);
+    console.log(`Applying migrations...`);
+    execSync(`npx prisma migrate reset --force --schema="${schemaPath}"`, {
+      stdio: "inherit",
+      env: { ...process.env, DATABASE_URL: databaseUrl },
+    });
+    execSync(`npx prisma migrate deploy --schema="${schemaPath}"`, {
+      stdio: "inherit",
+      env: { ...process.env, DATABASE_URL: databaseUrl },
+    });
+    console.log(`Migrations applied successfully.`);
   } catch (error) {
-    console.error(`Error applying migrations for ${envFilePath}:`, error);
+    console.error(`Error applying migrations:`, error);
   }
 }
 
-async function verifyTables(envFilePath) {
-  const envConfig = dotenv.config({ path: envFilePath }).parsed;
-
-  const databaseUrl = envConfig.DATABASE_URL;
-
+async function verifyTables(databaseUrl) {
   console.log(`Verifying tables for database URL: ${databaseUrl}`);
 
   const prisma = new PrismaClient({
@@ -46,37 +32,78 @@ async function verifyTables(envFilePath) {
   try {
     const tables =
       await prisma.$queryRaw`SELECT table_name FROM information_schema.tables WHERE table_schema='public';`;
-    console.log(
-      `Tables in database for ${envFilePath}: ${JSON.stringify(
-        tables,
-        null,
-        2
-      )}`
-    );
+    console.log(`Tables in database: ${JSON.stringify(tables, null, 2)}`);
   } catch (error) {
-    console.error(`Error fetching tables for ${envFilePath}:`, error);
+    console.error(`Error fetching tables:`, error);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+async function addDefaultCategory(databaseUrl) {
+  const prisma = new PrismaClient({
+    datasources: { db: { url: databaseUrl } },
+  });
+
+  try {
+    const existingCategory = await prisma.category.findFirst({
+      where: { name: "Uncategorized" },
+    });
+
+    if (!existingCategory) {
+      await prisma.category.create({
+        data: {
+          name: "Uncategorized",
+          description: "Default category for uncategorized products",
+        },
+      });
+      console.log(
+        `Default "Uncategorized" category added to database: ${databaseUrl}`
+      );
+    } else {
+      console.log(
+        `Default "Uncategorized" category already exists in database: ${databaseUrl}`
+      );
+    }
+  } catch (error) {
+    console.error(
+      `Error adding default category to database ${databaseUrl}:`,
+      error
+    );
   } finally {
     await prisma.$disconnect();
   }
 }
 
 async function setupDatabase(envFilePath) {
-  await applyMigrations(envFilePath);
-  await verifyTables(envFilePath);
+  const envConfig = dotenv.config({ path: envFilePath }).parsed;
+  const databaseUrl = envConfig.DATABASE_URL;
+  const schemaPath = path.resolve("backend/prisma/schema.prisma");
+
+  if (!databaseUrl) {
+    throw new Error(`DATABASE_URL is not defined in ${envFilePath}`);
+  }
+
+  await applyMigrations(databaseUrl, schemaPath);
+  await verifyTables(databaseUrl);
+  await addDefaultCategory(databaseUrl);
+}
+
+async function setupDevDatabase() {
+  const envPath = path.resolve(".env");
+  console.log(`Setting up database for development environment: ${envPath}`);
+  await setupDatabase(envPath);
+}
+
+async function setupTestDatabase() {
+  const envPath = path.resolve(".env.test");
+  console.log(`Setting up database for test environment: ${envPath}`);
+  await setupDatabase(envPath);
 }
 
 async function main() {
-  const envPaths = [
-    path.resolve(__dirname, "backend/.env"),
-    path.resolve(__dirname, "backend/.env.test"),
-  ];
-
-  for (const envPath of envPaths) {
-    console.log(`Setting up database for environment: ${envPath}`);
-    dotenv.config({ path: envPath });
-    console.log(`Loaded DATABASE_URL: ${process.env.DATABASE_URL}`);
-    await setupDatabase(envPath);
-  }
+  await setupDevDatabase();
+  await setupTestDatabase();
 }
 
 main().catch((e) => {
