@@ -1,26 +1,26 @@
 import express from "express";
 import {
-  createProductImage,
-  getAllProductImages,
-  getProductImage,
-  getAllProductImagesByProductId,
-  getAllProductVariantImagesByVariantId,
-  updateProductImage,
-  archiveProductImage,
-  unarchiveProductImage,
-  deleteProductImage,
+  createProductImageHandler,
+  getAllProductImagesHandler,
+  getProductImageHandler,
+  getAllProductImagesByProductIdHandler,
+  getAllProductVariantImagesByVariantIdHandler,
+  updateProductImageHandler,
+  archiveProductImageHandler,
+  unarchiveProductImageHandler,
+  deleteProductImageHandler,
 } from "../controllers/productImageController.js";
 
 const router = express.Router();
 
-router.post("/", createProductImage);
-router.get("/", getAllProductImages);
-router.get("/:id", getProductImage);
-router.get("/product/:productId", getAllProductImagesByProductId);
-router.get("/variant/:variantId", getAllProductVariantImagesByVariantId);
-router.put("/:id", updateProductImage);
-router.put("/archive/:id", archiveProductImage);
-router.put("/unarchive/:id", unarchiveProductImage);
-router.delete("/:id", deleteProductImage);
+router.post("/", createProductImageHandler);
+router.get("/", getAllProductImagesHandler);
+router.get("/:id", getProductImageHandler);
+router.get("/product/:productId", getAllProductImagesByProductIdHandler);
+router.get("/variant/:variantId", getAllProductVariantImagesByVariantIdHandler);
+router.put("/:id", updateProductImageHandler);
+router.put("/archive/:id", archiveProductImageHandler);
+router.put("/unarchive/:id", unarchiveProductImageHandler);
+router.delete("/:id", deleteProductImageHandler);
 
 export default router;

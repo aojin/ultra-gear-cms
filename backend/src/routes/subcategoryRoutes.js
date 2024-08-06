@@ -1,18 +1,18 @@
 import express from "express";
 import {
-  createSubCategory,
-  getAllSubCategories,
-  getSubCategoryById,
-  updateSubCategory,
-  deleteSubCategory,
+  createSubCategoryHandler,
+  getAllSubCategoriesHandler,
+  getSubCategoryByIdHandler,
+  updateSubCategoryHandler,
+  deleteSubCategoryHandler,
 } from "../controllers/subcategoryController.js";
 
 const router = express.Router();
 
-router.post("/", createSubCategory);
-router.get("/", getAllSubCategories);
-router.get("/:id", getSubCategoryById);
-router.put("/:id", updateSubCategory);
-router.delete("/:id", deleteSubCategory);
+router.post("/", createSubCategoryHandler);
+router.get("/", getAllSubCategoriesHandler);
+router.get("/:id", getSubCategoryByIdHandler);
+router.put("/:id", updateSubCategoryHandler);
+router.delete("/:id", deleteSubCategoryHandler);
 
 export default router;

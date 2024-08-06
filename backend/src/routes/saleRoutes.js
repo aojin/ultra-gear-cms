@@ -1,18 +1,18 @@
 import express from "express";
 import {
-  createSale,
-  getAllSales,
-  getSaleById,
-  updateSale,
-  deleteSale,
+  createSaleHandler,
+  getAllSalesHandler,
+  getSaleByIdHandler,
+  updateSaleHandler,
+  deleteSaleHandler,
 } from "../controllers/saleController.js";
 
 const router = express.Router();
 
-router.post("/", createSale);
-router.get("/", getAllSales);
-router.get("/:id", getSaleById);
-router.put("/:id", updateSale);
-router.delete("/:id", deleteSale);
+router.post("/", createSaleHandler);
+router.get("/", getAllSalesHandler);
+router.get("/:id", getSaleByIdHandler);
+router.put("/:id", updateSaleHandler);
+router.delete("/:id", deleteSaleHandler);
 
 export default router;

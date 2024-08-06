@@ -1,24 +1,26 @@
 import express from "express";
 import {
-  createReview,
-  getAllReviews,
-  getReviewsByUserId,
-  getReviewsByProductId,
-  updateReview,
-  archiveReviewByUser,
-  archiveReviewByAdmin,
-  permanentlyDeleteReview,
-} from "../controllers/reviewController.js";
+  createReviewHandler,
+  getAllReviewsHandler,
+  getReviewsByUserIdHandler,
+  getReviewsByProductIdHandler,
+  updateReviewHandler,
+  archiveReviewByUserHandler,
+  archiveReviewByAdminHandler,
+  unarchiveReviewByAdminHandler,
+  permanentlyDeleteReviewHandler,
+} from "../controllers/reviewController";
 
 const router = express.Router();
 
-router.post("/", createReview);
-router.get("/", getAllReviews);
-router.get("/user/:userId", getReviewsByUserId);
-router.get("/product/:productId", getReviewsByProductId);
-router.put("/:id", updateReview);
-router.put("/archive/:id", archiveReviewByUser);
-router.put("/archive/admin/:id", archiveReviewByAdmin);
-router.delete("/:id", permanentlyDeleteReview);
+router.post("/", createReviewHandler);
+router.get("/", getAllReviewsHandler);
+router.get("/user/:userId", getReviewsByUserIdHandler);
+router.get("/product/:productId", getReviewsByProductIdHandler);
+router.put("/:id", updateReviewHandler);
+router.put("/archive/:id", archiveReviewByUserHandler);
+router.put("/archive/admin/:id", archiveReviewByAdminHandler);
+router.put("/unarchive/admin/:id", unarchiveReviewByAdminHandler);
+router.delete("/:id", permanentlyDeleteReviewHandler);
 
 export default router;

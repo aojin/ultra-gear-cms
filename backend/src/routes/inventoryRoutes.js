@@ -1,18 +1,18 @@
 import express from "express";
 import {
-  createInventory,
-  getAllInventories,
-  getInventoryById,
-  updateInventory,
-  deleteInventory,
+  createInventoryHandler,
+  getAllInventoriesHandler,
+  getInventoryByIdHandler,
+  updateInventoryHandler,
+  deleteInventoryHandler,
 } from "../controllers/inventoryController.js";
 
 const router = express.Router();
 
-router.post("/", createInventory);
-router.get("/", getAllInventories);
-router.get("/:id", getInventoryById);
-router.put("/:id", updateInventory);
-router.delete("/:id", deleteInventory);
+router.post("/", createInventoryHandler);
+router.get("/", getAllInventoriesHandler);
+router.get("/:id", getInventoryByIdHandler);
+router.put("/:id", updateInventoryHandler);
+router.delete("/:id", deleteInventoryHandler);
 
 export default router;

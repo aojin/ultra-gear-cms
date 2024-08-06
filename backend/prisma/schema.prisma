@@ -14,24 +14,25 @@ model Product {
   msrpPrice      Float
   currentPrice   Float             @default(0.0)
   onSale         Boolean           @default(false)
-  images         ProductImage[]
   brand          String
   model          String
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   archived       Boolean           @default(false)
+  isSingleSize   Boolean           @default(false)
+  quantity       Int?              @default(0)
+  images         ProductImage[]
   variants       ProductVariant[]
   reviews        Review[]
   inventory      Inventory[]
   sales          Sale[]            @relation("ProductSales")
   categories     Category[]        @relation("ProductCategories")
   subcategories  SubCategory[]     @relation("ProductSubCategories")
-  sizes          Size[]
-  isSingleSize   Boolean           @default(false)
-  quantity       Int?
   packages       Package[]         @relation("ProductPackages")
   cartItems      CartItem[]
+  sizes          Size[]
 }
+
 
 model ProductVariant {
   id             Int              @id @default(autoincrement())
@@ -58,8 +59,10 @@ model Size {
   quantity       Int
   productId      Int?
   product        Product?          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productName    String?
   variantId      Int?
   variant        ProductVariant?   @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantName    String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @default(now())
   archived       Boolean           @default(false)
@@ -219,7 +222,7 @@ model PromoCode {
 model Package {
   id             Int              @id @default(autoincrement())
   name           String
-  description    String
+  description    String?
   price          Float
   products       Product[]         @relation("ProductPackages")
 }

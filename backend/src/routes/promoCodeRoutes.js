@@ -1,18 +1,18 @@
 import express from "express";
 import {
-  createPromoCode,
-  getPromoCodeById,
-  getAllPromoCodes,
-  updatePromoCode,
-  deletePromoCode,
+  createPromoCodeHandler,
+  getPromoCodeByIdHandler,
+  getAllPromoCodesHandler,
+  updatePromoCodeHandler,
+  deletePromoCodeHandler,
 } from "../controllers/promoCodeController.js";
 
 const router = express.Router();
 
-router.post("/", createPromoCode);
-router.get("/", getAllPromoCodes);
-router.get("/:id", getPromoCodeById);
-router.put("/:id", updatePromoCode);
-router.delete("/:id", deletePromoCode);
+router.post("/", createPromoCodeHandler);
+router.get("/", getAllPromoCodesHandler);
+router.get("/:id", getPromoCodeByIdHandler);
+router.put("/:id", updatePromoCodeHandler);
+router.delete("/:id", deletePromoCodeHandler);
 
 export default router;

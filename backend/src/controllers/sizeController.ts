@@ -1,15 +1,26 @@
-import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express";
+import {
+  createSize,
+  getAllSizes,
+  getSizesByProductId,
+  getSizesByVariantId,
+  getSizeById,
+  updateSize,
+  archiveSize,
+  unarchiveSize,
+  deleteSize,
+  CreateSizeInput,
+  UpdateSizeInput,
+} from "../services/sizeService";
 
-const prisma = new PrismaClient();
-
-// Create a new Size
-export const createSize = async (req, res) => {
-  const { size, quantity, productId, variantId } = req.body;
+export const createSizeHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { size, quantity, productId, variantId }: CreateSizeInput = req.body;
 
   try {
-    const newSize = await prisma.size.create({
-      data: { size, quantity, productId, variantId },
-    });
+    const newSize = await createSize({ size, quantity, productId, variantId });
     res.status(201).json(newSize);
   } catch (error) {
     console.error("Error creating Size:", error);
@@ -17,10 +28,12 @@ export const createSize = async (req, res) => {
   }
 };
 
-// Get all Sizes
-export const getAllSizes = async (req, res) => {
+export const getAllSizesHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    const sizes = await prisma.size.findMany();
+    const sizes = await getAllSizes();
     res.status(200).json(sizes);
   } catch (error) {
     console.error("Error fetching Sizes:", error);
@@ -28,18 +41,19 @@ export const getAllSizes = async (req, res) => {
   }
 };
 
-// Get Sizes by Product ID
-export const getSizesByProductId = async (req, res) => {
+export const getSizesByProductIdHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { productId } = req.params;
 
   try {
-    const sizes = await prisma.size.findMany({
-      where: { productId: parseInt(productId, 10) },
-    });
+    const sizes = await getSizesByProductId(parseInt(productId, 10));
     if (sizes.length === 0) {
-      return res
+      res
         .status(404)
         .json({ error: "No sizes found for the given product ID" });
+      return;
     }
     res.status(200).json(sizes);
   } catch (error) {
@@ -48,18 +62,19 @@ export const getSizesByProductId = async (req, res) => {
   }
 };
 
-// Get Sizes by Variant ID
-export const getSizesByVariantId = async (req, res) => {
+export const getSizesByVariantIdHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { variantId } = req.params;
 
   try {
-    const sizes = await prisma.size.findMany({
-      where: { variantId: parseInt(variantId, 10) },
-    });
+    const sizes = await getSizesByVariantId(parseInt(variantId, 10));
     if (sizes.length === 0) {
-      return res
+      res
         .status(404)
         .json({ error: "No sizes found for the given variant ID" });
+      return;
     }
     res.status(200).json(sizes);
   } catch (error) {
@@ -68,16 +83,17 @@ export const getSizesByVariantId = async (req, res) => {
   }
 };
 
-// Get a Size by ID
-export const getSizeById = async (req, res) => {
+export const getSizeByIdHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const size = await prisma.size.findUnique({
-      where: { id: parseInt(id) },
-    });
+    const size = await getSizeById(parseInt(id, 10));
     if (!size) {
-      return res.status(404).json({ error: "Size not found" });
+      res.status(404).json({ error: "Size not found" });
+      return;
     }
     res.status(200).json(size);
   } catch (error) {
@@ -86,15 +102,17 @@ export const getSizeById = async (req, res) => {
   }
 };
 
-// Update a Size
-export const updateSize = async (req, res) => {
+export const updateSizeHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { id } = req.params;
-  const { size, quantity } = req.body;
+  const { size, quantity }: UpdateSizeInput = req.body;
 
   try {
-    const updatedSize = await prisma.size.update({
-      where: { id: parseInt(id) },
-      data: { size, quantity },
+    const updatedSize = await updateSize(parseInt(id, 10), {
+      size,
+      quantity,
     });
     res.status(200).json(updatedSize);
   } catch (error) {
@@ -103,15 +121,14 @@ export const updateSize = async (req, res) => {
   }
 };
 
-// Archive a Size
-export const archiveSize = async (req, res) => {
+export const archiveSizeHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const archivedSize = await prisma.size.update({
-      where: { id: parseInt(id) },
-      data: { archived: true },
-    });
+    const archivedSize = await archiveSize(parseInt(id, 10));
     res.status(200).json(archivedSize);
   } catch (error) {
     console.error("Error archiving Size:", error);
@@ -119,15 +136,14 @@ export const archiveSize = async (req, res) => {
   }
 };
 
-// Unarchive a Size
-export const unarchiveSize = async (req, res) => {
+export const unarchiveSizeHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const unarchivedSize = await prisma.size.update({
-      where: { id: parseInt(id) },
-      data: { archived: false },
-    });
+    const unarchivedSize = await unarchiveSize(parseInt(id, 10));
     res.status(200).json(unarchivedSize);
   } catch (error) {
     console.error("Error unarchiving Size:", error);
@@ -135,14 +151,14 @@ export const unarchiveSize = async (req, res) => {
   }
 };
 
-// Delete a Size
-export const deleteSize = async (req, res) => {
+export const deleteSizeHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { id } = req.params;
 
   try {
-    await prisma.size.delete({
-      where: { id: parseInt(id) },
-    });
+    await deleteSize(parseInt(id, 10));
     res.status(204).send(); // No content
   } catch (error) {
     console.error("Error deleting Size:", error);
