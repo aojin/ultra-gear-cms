@@ -34,7 +34,8 @@ export const createProductImageHandler = async (
     });
     res.status(201).json(productImage);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error creating product image:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -46,7 +47,8 @@ export const getAllProductImagesHandler = async (
     const productImages = await getAllProductImages();
     res.status(200).json(productImages);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching product images:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -62,7 +64,8 @@ export const getProductImageHandler = async (
     }
     res.status(200).json(productImage);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching product image by ID:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -76,7 +79,11 @@ export const getAllProductImagesByProductIdHandler = async (
     );
     res.status(200).json(productImages);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(
+      "Controller: Error fetching product images by product ID:",
+      error
+    );
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -90,7 +97,11 @@ export const getAllProductVariantImagesByVariantIdHandler = async (
     );
     res.status(200).json(productVariantImages);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(
+      "Controller: Error fetching product images by variant ID:",
+      error
+    );
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -115,7 +126,8 @@ export const updateProductImageHandler = async (
     });
     res.status(200).json(productImage);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error updating product image:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -127,7 +139,8 @@ export const archiveProductImageHandler = async (
     const productImage = await archiveProductImage(parseInt(req.params.id, 10));
     res.status(200).json(productImage);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error archiving product image:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -141,7 +154,7 @@ export const unarchiveProductImageHandler = async (
     );
     res.status(200).json(productImage);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -153,6 +166,6 @@ export const deleteProductImageHandler = async (
     await deleteProductImage(parseInt(req.params.id, 10));
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: (error as Error).message });
   }
 };

@@ -29,7 +29,9 @@ export const createUserHandler = async (
     });
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res
+      .status(500)
+      .json({ error: "An error occurred while creating the user" });
   }
 };
 
@@ -41,7 +43,7 @@ export const getAllUsersHandler = async (
     const users = await getAllUsers();
     res.json(users);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "An error occured while fetching users" });
   }
 };
 
@@ -58,7 +60,7 @@ export const getUserByIdHandler = async (
       res.status(404).json({ error: "User not found" });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "An error occurred while fetching user" });
   }
 };
 
@@ -79,7 +81,7 @@ export const updateUserHandler = async (
     });
     res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "An error occurred updating user" });
   }
 };
 
@@ -91,11 +93,11 @@ export const archiveUserHandler = async (
   try {
     const user = await archiveUser(parseInt(id, 10));
     res.status(200).json(user); // Ensure proper status code
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === "P2025") {
       res.status(404).json({ error: "User not found" });
     } else {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: "An error occurred while archiving user" });
     }
   }
 };
@@ -108,11 +110,13 @@ export const permanentlyDeleteUserHandler = async (
   try {
     await permanentlyDeleteUser(parseInt(id, 10));
     res.status(204).send();
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === "P2025") {
       res.status(404).json({ error: "User not found" });
     } else {
-      res.status(500).json({ error: error.message });
+      res
+        .status(500)
+        .json({ error: "An error occurred while permanently deleting user" });
     }
   }
 };
@@ -126,7 +130,9 @@ export const getOrdersByUserIdHandler = async (
     const orders = await getOrdersByUserId(parseInt(userId, 10));
     res.status(200).json(orders);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching orders by user" });
   }
 };
 
@@ -139,7 +145,7 @@ export const getAllUserCartsHandler = async (
     const carts = await getAllUserCarts(parseInt(userId, 10));
     res.status(200).json(carts);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "An error occurred fetching carts by user" });
   }
 };
 
@@ -152,6 +158,8 @@ export const getAllUserReviewsHandler = async (
     const reviews = await getAllUserReviews(parseInt(userId, 10));
     res.status(200).json(reviews);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res
+      .status(500)
+      .json({ error: "An error occurred fetching reviews by user" });
   }
 };

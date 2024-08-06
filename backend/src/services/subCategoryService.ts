@@ -1,4 +1,4 @@
-import { PrismaClient, SubCategory } from "@prisma/client";
+import { Prisma, PrismaClient, SubCategory } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -7,25 +7,44 @@ export const createSubCategory = async (
   description: string,
   categoryId: number
 ): Promise<SubCategory> => {
-  return await prisma.subCategory.create({
-    data: {
-      name,
-      description,
-      categoryId,
-    },
-  });
+  try {
+    return await prisma.subCategory.create({
+      data: {
+        name,
+        description,
+        categoryId,
+      },
+    });
+  } catch (error) {
+    console.error("Service Error: Creating subcategory:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      throw new Error("Service Error: Known request error occurred");
+    } else {
+      throw new Error("Service Error: Failed to create size");
+    }
+  }
 };
 
 export const getAllSubCategories = async (): Promise<SubCategory[]> => {
-  return await prisma.subCategory.findMany();
+  try {
+    return await prisma.subCategory.findMany();
+  } catch (error) {
+    console.error("Service Error: Fetching all subcategories:", error);
+    throw new Error("Service Error: Failed to fetch all subcategories");
+  }
 };
 
 export const getSubCategoryById = async (
   id: number
 ): Promise<SubCategory | null> => {
-  return await prisma.subCategory.findUnique({
-    where: { id },
-  });
+  try {
+    return await prisma.subCategory.findUnique({
+      where: { id },
+    });
+  } catch (error) {
+    console.error("Service Error: Fetching subcategory by ID:", error);
+    throw new Error("Service Error: Failed to fetch subcategory by ID");
+  }
 };
 
 export const updateSubCategory = async (
@@ -34,14 +53,23 @@ export const updateSubCategory = async (
   description: string,
   categoryId: number
 ): Promise<SubCategory> => {
-  return await prisma.subCategory.update({
-    where: { id },
-    data: {
-      name,
-      description,
-      categoryId,
-    },
-  });
+  try {
+    return await prisma.subCategory.update({
+      where: { id },
+      data: {
+        name,
+        description,
+        categoryId,
+      },
+    });
+  } catch (error) {
+    console.error("Service Error: Updating subcategory:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      throw new Error("Service Error: Known request error occurred");
+    } else {
+      throw new Error("Service Error: Failed to update subcategory");
+    }
+  }
 };
 
 export const deleteSubCategory = async (id: number): Promise<void> => {
@@ -56,18 +84,41 @@ export const deleteSubCategory = async (id: number): Promise<void> => {
 
   await prisma.$transaction(async (tx) => {
     for (const product of subCategory.products) {
-      await tx.product.update({
-        where: { id: product.id },
-        data: {
-          subcategories: {
-            disconnect: { id: subCategory.id },
+      try {
+        await tx.product.update({
+          where: { id: product.id },
+          data: {
+            subcategories: {
+              disconnect: { id: subCategory.id },
+            },
           },
-        },
-      });
+        });
+      } catch (error) {
+        console.error(
+          "Service Error: Deleting disconnecting subcategory from category to delete:",
+          error
+        );
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          throw new Error("Service Error: Known request error occurred");
+        } else {
+          throw new Error(
+            "Service Error: Failed to disconnect subcategory from category to delete"
+          );
+        }
+      }
     }
 
-    await tx.subCategory.delete({
-      where: { id: subCategory.id },
-    });
+    try {
+      await tx.subCategory.delete({
+        where: { id: subCategory.id },
+      });
+    } catch (error) {
+      console.error("Service Error: Deleting subcategory:", error);
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new Error("Service Error: Known request error occurred");
+      } else {
+        throw new Error("Service Error: Failed to delete subcategory");
+      }
+    }
   });
 };

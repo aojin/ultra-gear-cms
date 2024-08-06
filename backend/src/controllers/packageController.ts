@@ -29,7 +29,8 @@ export const createPackageHandler = async (
     });
     res.status(201).json(newPackage);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error creating package:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -41,7 +42,8 @@ export const getAllPackagesHandler = async (
     const packages = await getAllPackages();
     res.status(200).json(packages);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching packages:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -57,7 +59,8 @@ export const getPackageByIdHandler = async (
       res.status(404).json({ error: "Package not found" });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching package by ID:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -82,7 +85,8 @@ export const updatePackageHandler = async (
     });
     res.status(200).json(updatedPackage);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error updating package:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -95,6 +99,7 @@ export const deletePackageHandler = async (
     await deletePackage(parseInt(id, 10));
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error deleting package:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };

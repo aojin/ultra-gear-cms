@@ -26,8 +26,8 @@ export const createInventoryHandler = async (
       quantity,
     });
     res.status(201).json(inventory);
-  } catch (error) {
-    console.error("Service: Error creating inventory:", error);
+  } catch (error: any) {
+    console.error("Controller: Error creating inventory:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -39,8 +39,8 @@ export const getAllInventoriesHandler = async (
   try {
     const inventories = await getAllInventories();
     res.status(200).json(inventories);
-  } catch (error) {
-    console.error("Service: Error fetching inventories:", error);
+  } catch (error: any) {
+    console.error("Controller: Error fetching inventories:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -56,8 +56,8 @@ export const getInventoryByIdHandler = async (
       return;
     }
     res.status(200).json(inventory);
-  } catch (error) {
-    console.error("Service: Error fetching inventory by ID:", error);
+  } catch (error: any) {
+    console.error("Controller: Error fetching inventory by ID:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -82,8 +82,8 @@ export const updateInventoryHandler = async (
       quantity,
     });
     res.status(200).json(inventory);
-  } catch (error) {
-    console.error("Service: Error updating inventory:", error);
+  } catch (error: any) {
+    console.error("Controller: Error updating inventory:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -96,8 +96,8 @@ export const deleteInventoryHandler = async (
   try {
     await deleteInventory(parseInt(id, 10));
     res.status(204).send();
-  } catch (error) {
-    console.error("Service: Error deleting inventory:", error);
+  } catch (error: any) {
+    console.error("Controller: Error deleting inventory:", error);
     res.status(500).json({ error: error.message });
   }
 };

@@ -56,7 +56,7 @@ export const createProductVariantHandler = async (
     res.status(201).json(productVariant);
   } catch (error) {
     console.error("Controller Error: creating product variant:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -68,7 +68,8 @@ export const getAllProductVariantsHandler = async (
     const productVariants = await getAllProductVariants();
     res.status(200).json(productVariants);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: fetching product variants:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -88,7 +89,8 @@ export const getProductVariantByIdHandler = async (
     }
     res.status(200).json(productVariant);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: fetching product variant by ID:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -124,7 +126,8 @@ export const updateProductVariantHandler = async (
     );
     res.status(200).json(productVariant);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: updating product variant:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -136,7 +139,8 @@ export const deleteProductVariantHandler = async (
     await deleteProductVariant(parseInt(req.params.id, 10));
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: deleting product variant:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -150,7 +154,8 @@ export const archiveProductVariantHandler = async (
     );
     res.status(200).json(productVariant);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: archiving product variant:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -164,6 +169,7 @@ export const unarchiveProductVariantHandler = async (
     );
     res.status(200).json(productVariant);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: unarchiving product variant:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };

@@ -35,7 +35,10 @@ export const createReviewHandler = async (
     });
     res.status(201).json(review);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Creating review:", error);
+    res.status(500).json({
+      error: "An error occurred while creating the review.",
+    });
   }
 };
 
@@ -47,7 +50,10 @@ export const getAllReviewsHandler = async (
     const reviews = await getAllReviews();
     res.json(reviews);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Fetching all reviews:", error);
+    res.status(500).json({
+      error: "An error occurred while fetching all reviews.",
+    });
   }
 };
 
@@ -82,7 +88,10 @@ export const updateReviewHandler = async (
     });
     res.json(updatedReview);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Updating review:", error);
+    res.status(500).json({
+      error: "An error occurred while updating the review.",
+    });
   }
 };
 
@@ -107,7 +116,10 @@ export const archiveReviewByUserHandler = async (
     const archivedReview = await archiveReview(parseInt(id, 10));
     res.status(200).json(archivedReview);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Archiving review:", error);
+    res.status(500).json({
+      error: "An error occurred while archiving the review.",
+    });
   }
 };
 
@@ -127,7 +139,10 @@ export const archiveReviewByAdminHandler = async (
     const review = await archiveReview(parseInt(id, 10));
     res.status(200).json(review);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Archiving review:", error);
+    res.status(500).json({
+      error: "An error occurred while archiving the review.",
+    });
   }
 };
 
@@ -147,7 +162,10 @@ export const unarchiveReviewByAdminHandler = async (
     const review = await unarchiveReview(parseInt(id, 10));
     res.status(200).json(review);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Unarchiving review:", error);
+    res.status(500).json({
+      error: "An error occurred while unarchiving the review.",
+    });
   }
 };
 
@@ -167,7 +185,10 @@ export const permanentlyDeleteReviewHandler = async (
     await deleteReview(parseInt(id, 10));
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Deleting review:", error);
+    res.status(500).json({
+      error: "An error occurred while deleting the review.",
+    });
   }
 };
 
@@ -180,7 +201,10 @@ export const getReviewsByUserIdHandler = async (
     const reviews = await getReviewsByUserId(parseInt(userId, 10));
     res.status(200).json(reviews);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Fetching reviews by user ID:", error);
+    res.status(500).json({
+      error: "An error occurred while fetching reviews by user ID.",
+    });
   }
 };
 
@@ -193,6 +217,9 @@ export const getReviewsByProductIdHandler = async (
     const reviews = await getReviewsByProductId(parseInt(productId, 10));
     res.status(200).json(reviews);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Fetching reviews by product ID:", error);
+    res.status(500).json({
+      error: "An error occurred while fetching reviews by product ID.",
+    });
   }
 };

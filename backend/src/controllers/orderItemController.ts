@@ -9,7 +9,7 @@ import {
   CreateOrderItemInput,
 } from "../services/orderItemService";
 import { getProductById } from "../services/productService";
-import { getProductVariantById } from "./../services/productVariantService";
+import { getProductVariantById } from "../services/productVariantService";
 import { Request, Response } from "express";
 
 export const createOrderItemHandler = async (
@@ -53,8 +53,8 @@ export const createOrderItemHandler = async (
 
     res.status(201).json(orderItem);
   } catch (error) {
-    console.error("Error creating order item:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error creating order item:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -66,8 +66,8 @@ export const getAllOrderItemsHandler = async (
     const orderItems = await getAllOrderItems();
     res.status(200).json(orderItems);
   } catch (error) {
-    console.error("Error fetching order items:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching order items:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -83,8 +83,8 @@ export const getOrderItemByIdHandler = async (
       res.status(404).json({ error: "Order item not found" });
     }
   } catch (error) {
-    console.error("Error fetching order item:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching order item by ID:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -97,8 +97,8 @@ export const getOrderItemsByOrderIdHandler = async (
     const orderItems = await getOrderItemsByOrderId(parseInt(orderId, 10));
     res.status(200).json(orderItems);
   } catch (error) {
-    console.error("Error fetching order items by order ID:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching order items by order ID:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -122,8 +122,8 @@ export const updateOrderItemHandler = async (
 
     res.status(200).json(orderItem);
   } catch (error) {
-    console.error("Error updating order item:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error updating order item:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -136,11 +136,8 @@ export const archiveOrderItemHandler = async (
     const orderItem = await archiveOrderItem(parseInt(id, 10));
     res.status(200).json(orderItem);
   } catch (error) {
-    if (error.code === "P2025") {
-      res.status(404).json({ error: "Order item not found" });
-    } else {
-      res.status(500).json({ error: error.message });
-    }
+    console.error("Controller: Error archiving order item:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -153,7 +150,7 @@ export const deleteOrderItemHandler = async (
     await deleteOrderItem(parseInt(id, 10));
     res.status(204).end();
   } catch (error) {
-    console.error("Error deleting order item:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error deleting order item:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };

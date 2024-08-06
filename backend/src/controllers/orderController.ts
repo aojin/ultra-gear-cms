@@ -36,21 +36,16 @@ export const createOrderHandler = async (
       return;
     }
 
-    try {
-      const order = await createOrder({
-        userId: user.id,
-        totalAmount,
-        orderItems,
-      });
+    const order = await createOrder({
+      userId: user.id,
+      totalAmount,
+      orderItems,
+    });
 
-      res.status(201).json(order);
-    } catch (error) {
-      console.error("Service: Error creating order:", error);
-      res.status(500).json({ error: error.message });
-    }
+    res.status(201).json(order);
   } catch (error) {
-    console.error("Controller: Error finding user:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error creating order:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -62,8 +57,8 @@ export const getAllOrdersHandler = async (
     const orders = await getAllOrders();
     res.status(200).json(orders);
   } catch (error) {
-    console.error("Service: Error fetching orders:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching orders:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -79,8 +74,8 @@ export const getOrderByIdHandler = async (
     }
     res.status(200).json(order);
   } catch (error) {
-    console.error("Service: Error fetching order by ID:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error fetching order by ID:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -100,8 +95,8 @@ export const updateOrderHandler = async (
     });
     res.status(200).json(order);
   } catch (error) {
-    console.error("Service: Error updating order:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error updating order:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -114,7 +109,7 @@ export const deleteOrderHandler = async (
     await deleteOrder(parseInt(id, 10));
     res.status(204).send();
   } catch (error) {
-    console.error("Service: Error deleting order:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller: Error deleting order:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };

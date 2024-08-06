@@ -1,3 +1,4 @@
+import { Request, Response } from "express";
 import {
   createCart,
   getAllCarts,
@@ -5,7 +6,6 @@ import {
   deleteCart,
   CartItemInput,
 } from "../services/cartService";
-import { Request, Response } from "express";
 
 export const createCartHandler = async (
   req: Request,

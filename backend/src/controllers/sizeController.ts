@@ -23,8 +23,10 @@ export const createSizeHandler = async (
     const newSize = await createSize({ size, quantity, productId, variantId });
     res.status(201).json(newSize);
   } catch (error) {
-    console.error("Error creating Size:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Creating size:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while creating the size." });
   }
 };
 
@@ -36,8 +38,10 @@ export const getAllSizesHandler = async (
     const sizes = await getAllSizes();
     res.status(200).json(sizes);
   } catch (error) {
-    console.error("Error fetching Sizes:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Fetching all sizes:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching all sizes." });
   }
 };
 
@@ -57,8 +61,10 @@ export const getSizesByProductIdHandler = async (
     }
     res.status(200).json(sizes);
   } catch (error) {
-    console.error("Error fetching Sizes by product ID:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Fetching sizes by product ID:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching sizes by product ID." });
   }
 };
 
@@ -78,8 +84,10 @@ export const getSizesByVariantIdHandler = async (
     }
     res.status(200).json(sizes);
   } catch (error) {
-    console.error("Error fetching Sizes by variant ID:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Fetching sizes by variant ID:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching sizes by variant ID." });
   }
 };
 
@@ -97,8 +105,10 @@ export const getSizeByIdHandler = async (
     }
     res.status(200).json(size);
   } catch (error) {
-    console.error("Error fetching Size:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Fetching size by ID:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching the size by ID." });
   }
 };
 
@@ -116,8 +126,10 @@ export const updateSizeHandler = async (
     });
     res.status(200).json(updatedSize);
   } catch (error) {
-    console.error("Error updating Size:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Updating size:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the size." });
   }
 };
 
@@ -131,8 +143,10 @@ export const archiveSizeHandler = async (
     const archivedSize = await archiveSize(parseInt(id, 10));
     res.status(200).json(archivedSize);
   } catch (error) {
-    console.error("Error archiving Size:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Archiving size:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while archiving the size." });
   }
 };
 
@@ -146,8 +160,10 @@ export const unarchiveSizeHandler = async (
     const unarchivedSize = await unarchiveSize(parseInt(id, 10));
     res.status(200).json(unarchivedSize);
   } catch (error) {
-    console.error("Error unarchiving Size:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Unarchiving size:", error);
+    res
+      .status(400)
+      .json({ error: "An error occurred while unarchiving the size" });
   }
 };
 
@@ -161,7 +177,9 @@ export const deleteSizeHandler = async (
     await deleteSize(parseInt(id, 10));
     res.status(204).send(); // No content
   } catch (error) {
-    console.error("Error deleting Size:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Deleting size:", error);
+    res
+      .status(400)
+      .json({ error: "An error occurred while deleting the size" });
   }
 };

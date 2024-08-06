@@ -38,7 +38,7 @@ export const createProductHandler = async (
   } catch (error) {
     console.error("Controller error: Error creating product:", error);
     res.status(500).json({
-      error: "Controller error: An error occurred while creating the product.",
+      error: (error as Error).message,
     });
   }
 };
@@ -53,7 +53,7 @@ export const getAllProductsHandler = async (
   } catch (error) {
     console.error("Controller error: Error getting all products:", error);
     res.status(500).json({
-      error: "Controller error: An error occurred while fetching all products.",
+      error: (error as Error).message,
     });
   }
 };
@@ -72,8 +72,7 @@ export const getProductByIdHandler = async (
   } catch (error) {
     console.error("Controller error: Error getting product by ID:", error);
     res.status(500).json({
-      error:
-        "Controller error: An error occurred while fetching the product by ID.",
+      error: (error as Error).message,
     });
   }
 };
@@ -118,7 +117,7 @@ export const updateProductHandler = async (
   } catch (error) {
     console.error("Controller error: Error updating product:", error);
     res.status(500).json({
-      error: "Controller error: An error occurred while updating the product.",
+      error: (error as Error).message,
     });
   }
 };
@@ -137,8 +136,7 @@ export const deleteProductPermanentlyHandler = async (
       error
     );
     res.status(500).json({
-      error:
-        "Controller error: An error occurred while deleting the product permanently.",
+      error: (error as Error).message,
     });
   }
 };
@@ -154,7 +152,7 @@ export const archiveProductHandler = async (
   } catch (error) {
     console.error("Controller error: Error archiving product:", error);
     res.status(500).json({
-      error: "Controller error: An error occurred while archiving the product.",
+      error: (error as Error).message,
     });
   }
 };
@@ -170,8 +168,7 @@ export const unarchiveProductHandler = async (
   } catch (error) {
     console.error("Controller error: Error unarchiving product:", error);
     res.status(500).json({
-      error:
-        "Controller error: An error occurred while unarchiving the product.",
+      error: (error as Error).message,
     });
   }
 };

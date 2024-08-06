@@ -18,7 +18,9 @@ export const createSubCategoryHandler = async (
     res.status(201).json(subCategory);
   } catch (error) {
     console.error("Error creating subcategory:", error);
-    res.status(400).json({ error: error.message });
+    res
+      .status(400)
+      .json({ error: "An error occurred while creating the subcategory" });
   }
 };
 
@@ -31,7 +33,9 @@ export const getAllSubCategoriesHandler = async (
     res.status(200).json(subCategories);
   } catch (error) {
     console.error("Error fetching subcategories:", error);
-    res.status(400).json({ error: error.message });
+    res
+      .status(400)
+      .json({ error: "An error occurred while fetching all subcategories" });
   }
 };
 
@@ -50,7 +54,9 @@ export const getSubCategoryByIdHandler = async (
     res.status(200).json(subCategory);
   } catch (error) {
     console.error("Error fetching subcategory:", error);
-    res.status(400).json({ error: error.message });
+    res
+      .status(400)
+      .json({ error: "An error occurred while fetching subcategory by id" });
   }
 };
 
@@ -71,7 +77,9 @@ export const updateSubCategoryHandler = async (
     res.status(200).json(subCategory);
   } catch (error) {
     console.error("Error updating subcategory:", error);
-    res.status(400).json({ error: error.message });
+    res
+      .status(400)
+      .json({ error: "An error occured while updating subcategory" });
   }
 };
 
@@ -86,6 +94,8 @@ export const deleteSubCategoryHandler = async (
     res.status(204).end();
   } catch (error) {
     console.error("Error deleting subcategory:", error);
-    res.status(400).json({ error: error.message });
+    res
+      .status(400)
+      .json({ error: "An error occurred while deleting subcategory" });
   }
 };

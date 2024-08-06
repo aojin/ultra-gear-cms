@@ -23,8 +23,8 @@ export const createPromoCodeHandler = async (
     });
     res.status(201).json(promoCode);
   } catch (error) {
-    console.error("Error creating PromoCode:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Creating promo code:", error);
+    res.status(400).json({ error: (error as Error).message });
   }
 };
 
@@ -37,14 +37,14 @@ export const getPromoCodeByIdHandler = async (
     const promoCode = await getPromoCodeById(parseInt(id, 10));
 
     if (!promoCode) {
-      res.status(404).json({ error: "PromoCode not found" });
+      res.status(404).json({ error: "Promo code not found" });
       return;
     }
 
     res.status(200).json(promoCode);
   } catch (error) {
-    console.error("Error retrieving PromoCode:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Retrieving promo code by ID:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -54,10 +54,10 @@ export const getAllPromoCodesHandler = async (
 ): Promise<void> => {
   try {
     const promoCodes = await getAllPromoCodes();
-    res.json(promoCodes);
+    res.status(200).json(promoCodes);
   } catch (error) {
-    console.error("Error fetching PromoCodes:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Fetching promo codes:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -73,10 +73,10 @@ export const updatePromoCodeHandler = async (
       validFrom,
       validTo,
     });
-    res.json(promoCode);
+    res.status(200).json(promoCode);
   } catch (error) {
-    console.error("Error updating PromoCode:", error);
-    res.status(400).json({ error: error.message });
+    console.error("Controller Error: Updating promo code:", error);
+    res.status(400).json({ error: (error as Error).message });
   }
 };
 
@@ -87,9 +87,9 @@ export const deletePromoCodeHandler = async (
   const { id } = req.params;
   try {
     await deletePromoCode(parseInt(id, 10));
-    res.status(204).json({ message: "PromoCode deleted successfully" });
+    res.status(204).json({ message: "Promo code deleted successfully" });
   } catch (error) {
-    console.error("Error deleting PromoCode:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Controller Error: Deleting promo code:", error);
+    res.status(500).json({ error: (error as Error).message });
   }
 };

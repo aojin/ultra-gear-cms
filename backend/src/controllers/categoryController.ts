@@ -21,8 +21,8 @@ export const createCategoryHandler = async (
   try {
     const category = await createCategory({ name, description });
     res.status(201).json(category);
-  } catch (error) {
-    console.error("Service: Error creating category:", error);
+  } catch (error: any) {
+    console.error("Controller: Error creating category:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -34,8 +34,8 @@ export const getAllCategoriesHandler = async (
   try {
     const categories = await getAllCategories();
     res.status(200).json(categories);
-  } catch (error) {
-    console.error("Service: Error fetching categories:", error);
+  } catch (error: any) {
+    console.error("Controller: Error fetching categories:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -51,8 +51,8 @@ export const getCategoryByIdHandler = async (
       return;
     }
     res.status(200).json(category);
-  } catch (error) {
-    console.error("Service: Error fetching category by ID:", error);
+  } catch (error: any) {
+    console.error("Controller: Error fetching category by ID:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -75,8 +75,8 @@ export const updateCategoryHandler = async (
       description,
     });
     res.status(200).json(category);
-  } catch (error) {
-    console.error("Service: Error updating category:", error);
+  } catch (error: any) {
+    console.error("Controller: Error updating category:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -89,8 +89,8 @@ export const deleteCategoryHandler = async (
   try {
     await deleteCategory(parseInt(id, 10));
     res.status(204).send();
-  } catch (error) {
-    console.error("Service: Error deleting category:", error);
+  } catch (error: any) {
+    console.error("Controller: Error deleting category:", error);
     res.status(500).json({ error: error.message });
   }
 };
