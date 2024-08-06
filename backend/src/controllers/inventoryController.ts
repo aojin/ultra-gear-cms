@@ -2,8 +2,12 @@ import {
   createInventory,
   getAllInventories,
   getInventoryById,
+  getInventoryByProductId,
+  getInventoryByVariantId,
   updateInventory,
   deleteInventory,
+  incrementInventory,
+  decrementInventory,
 } from "../services/inventoryService";
 import { Request, Response } from "express";
 
@@ -62,6 +66,36 @@ export const getInventoryByIdHandler = async (
   }
 };
 
+export const getInventoryByProductIdHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const inventory = await getInventoryByProductId(
+      parseInt(req.params.id, 10)
+    );
+    res.status(200).json(inventory);
+  } catch (error: any) {
+    console.error("Controller: Error fetching inventory by product ID:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getInventoryByVariantIdHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const inventory = await getInventoryByVariantId(
+      parseInt(req.params.id, 10)
+    );
+    res.status(200).json(inventory);
+  } catch (error: any) {
+    console.error("Controller: Error fetching inventory by variant ID:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const updateInventoryHandler = async (
   req: Request,
   res: Response
@@ -98,6 +132,36 @@ export const deleteInventoryHandler = async (
     res.status(204).send();
   } catch (error: any) {
     console.error("Controller: Error deleting inventory:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const incrementInventoryHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { id, amount } = req.body;
+
+  try {
+    const inventory = await incrementInventory(id, amount);
+    res.status(200).json(inventory);
+  } catch (error: any) {
+    console.error("Controller: Error incrementing inventory:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const decrementInventoryHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { id, amount } = req.body;
+
+  try {
+    const inventory = await decrementInventory(id, amount);
+    res.status(200).json(inventory);
+  } catch (error: any) {
+    console.error("Controller: Error decrementing inventory:", error);
     res.status(500).json({ error: error.message });
   }
 };

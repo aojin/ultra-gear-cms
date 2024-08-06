@@ -46,6 +46,38 @@ export const getInventoryById = async (
   }
 };
 
+export const getInventoryByProductId = async (
+  productId: number
+): Promise<{ product: Inventory | null; variants: Inventory[] }> => {
+  try {
+    const productInventory = await prisma.inventory.findFirst({
+      where: { productId, variantId: null },
+    });
+
+    const variantInventories = await prisma.inventory.findMany({
+      where: { productId, variantId: { not: null } },
+    });
+
+    return { product: productInventory, variants: variantInventories };
+  } catch (error: any) {
+    console.error("Service: Error fetching product inventory:", error);
+    throw new Error("Service Error: Failed to fetch product inventory");
+  }
+};
+
+export const getInventoryByVariantId = async (
+  variantId: number
+): Promise<Inventory[]> => {
+  try {
+    return await prisma.inventory.findMany({
+      where: { variantId },
+    });
+  } catch (error: any) {
+    console.error("Service: Error fetching variant inventory:", error);
+    throw new Error("Service Error: Failed to fetch variant inventory");
+  }
+};
+
 export const updateInventory = async (
   id: number,
   data: {
@@ -87,4 +119,103 @@ export const deleteInventory = async (id: number): Promise<Inventory> => {
       throw new Error("Service Error: Failed to delete inventory");
     }
   }
+};
+
+export const incrementInventory = async (
+  id: number,
+  amount: number
+): Promise<Inventory> => {
+  try {
+    const inventory = await prisma.inventory.update({
+      where: { id },
+      data: {
+        quantity: {
+          increment: amount,
+        },
+      },
+    });
+
+    if (inventory.variantId) {
+      await updateVariantQuantityFromSizes(inventory.variantId);
+    }
+    if (inventory.productId) {
+      await updateProductQuantityFromVariants(inventory.productId);
+    }
+
+    return inventory;
+  } catch (error: any) {
+    console.error("Service: Error incrementing inventory:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      throw new Error(
+        "Service Error: Unique constraint violation or other known error"
+      );
+    } else {
+      throw new Error("Service Error: Failed to increment inventory");
+    }
+  }
+};
+
+export const decrementInventory = async (
+  id: number,
+  amount: number
+): Promise<Inventory> => {
+  try {
+    const inventory = await prisma.inventory.update({
+      where: { id },
+      data: {
+        quantity: {
+          decrement: amount,
+        },
+      },
+    });
+
+    if (inventory.variantId) {
+      await updateVariantQuantityFromSizes(inventory.variantId);
+    }
+    if (inventory.productId) {
+      await updateProductQuantityFromVariants(inventory.productId);
+    }
+
+    return inventory;
+  } catch (error: any) {
+    console.error("Service: Error decrementing inventory:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      throw new Error(
+        "Service Error: Unique constraint violation or other known error"
+      );
+    } else {
+      throw new Error("Service Error: Failed to decrement inventory");
+    }
+  }
+};
+
+export const updateProductQuantityFromVariants = async (productId: number) => {
+  const variants = await prisma.productVariant.findMany({
+    where: { productId },
+    include: { inventory: true },
+  });
+  const totalQuantity = variants.reduce((sum, variant) => {
+    return (
+      sum +
+      (variant.inventory?.reduce((invSum, inv) => invSum + inv.quantity, 0) ||
+        0)
+    );
+  }, 0);
+  await prisma.product.update({
+    where: { id: productId },
+    data: { quantity: totalQuantity },
+  });
+};
+
+export const updateVariantQuantityFromSizes = async (variantId: number) => {
+  const sizes = await prisma.size.findMany({
+    where: { variantId },
+  });
+  const totalQuantity = sizes.reduce((sum, size) => {
+    return sum + size.quantity;
+  }, 0);
+  await prisma.productVariant.update({
+    where: { id: variantId },
+    data: { quantity: totalQuantity },
+  });
 };
