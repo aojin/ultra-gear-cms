@@ -12,7 +12,7 @@ export const createInventory = async (data: {
     return await prisma.inventory.create({
       data,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Service: Error creating inventory:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new Error(
@@ -123,7 +123,9 @@ export const deleteInventory = async (id: number): Promise<Inventory> => {
 
 export const incrementInventory = async (
   id: number,
-  amount: number
+  amount: number,
+  variantId?: number,
+  sizeId?: number
 ): Promise<Inventory> => {
   try {
     const inventory = await prisma.inventory.update({
@@ -135,8 +137,11 @@ export const incrementInventory = async (
       },
     });
 
-    if (inventory.variantId) {
-      await updateVariantQuantityFromSizes(inventory.variantId);
+    if (sizeId) {
+      await updateVariantQuantityFromSizes(sizeId);
+    }
+    if (variantId) {
+      await updateVariantQuantityFromSizes(variantId);
     }
     if (inventory.productId) {
       await updateProductQuantityFromVariants(inventory.productId);
@@ -156,27 +161,43 @@ export const incrementInventory = async (
 };
 
 export const decrementInventory = async (
-  id: number,
-  amount: number
+  productId: number,
+  quantity: number,
+  variantId?: number,
+  sizeId?: number
 ): Promise<Inventory> => {
   try {
-    const inventory = await prisma.inventory.update({
-      where: { id },
-      data: {
-        quantity: {
-          decrement: amount,
-        },
-      },
+    // Decrement the inventory quantity based on sizeId, variantId, or productId
+    if (sizeId) {
+      await prisma.size.update({
+        where: { id: sizeId },
+        data: { quantity: { decrement: quantity } },
+      });
+    } else if (variantId) {
+      await prisma.productVariant.update({
+        where: { id: variantId },
+        data: { quantity: { decrement: quantity } },
+      });
+    } else {
+      await prisma.product.update({
+        where: { id: productId },
+        data: { quantity: { decrement: quantity } },
+      });
+    }
+
+    // Fetch and return the updated inventory record
+    const inventory = await prisma.inventory.findUnique({
+      where: { id: productId }, // Assuming `id` is the primary key
     });
 
-    if (inventory.variantId) {
+    if (inventory?.variantId) {
       await updateVariantQuantityFromSizes(inventory.variantId);
     }
-    if (inventory.productId) {
+    if (inventory?.productId) {
       await updateProductQuantityFromVariants(inventory.productId);
     }
 
-    return inventory;
+    return inventory!;
   } catch (error: any) {
     console.error("Service: Error decrementing inventory:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

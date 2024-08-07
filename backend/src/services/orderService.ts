@@ -1,20 +1,11 @@
 import { PrismaClient, Order, Prisma } from "@prisma/client";
+import {
+  CreateOrderItemInput,
+  UpdateOrderItemInput,
+  UpdateOrderInput,
+} from "../types";
 
 const prisma = new PrismaClient();
-
-type OrderItemInput = {
-  productId?: number;
-  variantId?: number;
-  quantity: number;
-  price: number;
-  productName: string;
-};
-
-type CreateOrderInput = {
-  userId: number;
-  totalAmount: number;
-  orderItems: OrderItemInput[];
-};
 
 export const findUserById = async (userId: number) => {
   try {
@@ -31,43 +22,32 @@ export const findUserById = async (userId: number) => {
     });
   } catch (error) {
     console.error("Service: Error finding user by ID:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to find user by ID");
-    }
+    throw new Error("Service Error: Failed to find user by ID");
   }
 };
 
-export const createOrder = async (data: CreateOrderInput): Promise<Order> => {
-  try {
-    return await prisma.order.create({
-      data: {
-        userId: data.userId,
-        totalAmount: data.totalAmount,
-        orderItems: {
-          create: data.orderItems.map((item) => ({
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: item.quantity,
-            price: item.price,
-            productName: item.productName,
-          })),
-        },
+export const createOrder = async (
+  userId: number,
+  totalAmount: number,
+  orderItems: Array<{
+    productId: number;
+    quantity: number;
+    price: number;
+    productName: string;
+  }>
+): Promise<Order> => {
+  return await prisma.order.create({
+    data: {
+      userId,
+      totalAmount,
+      orderItems: {
+        create: orderItems,
       },
-    });
-  } catch (error) {
-    console.error("Service: Error creating order:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to create order");
-    }
-  }
+    },
+    include: {
+      orderItems: true,
+    },
+  });
 };
 
 export const getAllOrders = async (): Promise<Order[]> => {
@@ -111,7 +91,7 @@ export const getOrderById = async (id: number): Promise<Order | null> => {
 
 export const updateOrder = async (
   id: number,
-  data: Partial<CreateOrderInput>
+  data: UpdateOrderInput
 ): Promise<Order> => {
   try {
     return await prisma.order.update({
@@ -119,27 +99,26 @@ export const updateOrder = async (
       data: {
         userId: data.userId,
         totalAmount: data.totalAmount,
-        orderItems: {
-          deleteMany: {}, // Clear existing order items
-          create: data.orderItems?.map((item) => ({
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: item.quantity,
-            price: item.price,
-            productName: item.productName,
-          })),
-        },
+        orderItems: data.orderItems
+          ? {
+              deleteMany: {}, // Clear existing order items
+              create: data.orderItems.map((item) => ({
+                productId: item.productId,
+                productVariantId: item.productVariantId,
+                quantity: item.quantity,
+                price: item.price,
+                productName: item.productName,
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        orderItems: true, // Ensure orderItems are included in the response
       },
     });
   } catch (error) {
     console.error("Service: Error updating order:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to update order");
-    }
+    throw new Error("Service Error: Failed to update order");
   }
 };
 
@@ -193,5 +172,59 @@ export const unarchiveOrder = async (id: number): Promise<Order> => {
     } else {
       throw new Error("Service Error: Failed to unarchive order");
     }
+  }
+};
+
+export const decrementInventory = async (
+  productId: number,
+  quantity: number,
+  variantId?: number | null,
+  sizeId?: number | null
+): Promise<void> => {
+  try {
+    // Decrement inventory for the size, if sizeId is provided
+    if (sizeId) {
+      await prisma.inventory.updateMany({
+        where: {
+          productId,
+          sizeId,
+        },
+        data: {
+          quantity: {
+            decrement: quantity,
+          },
+        },
+      });
+    }
+    // Decrement inventory for the variant, if variantId is provided
+    else if (variantId) {
+      await prisma.inventory.updateMany({
+        where: {
+          productId,
+          variantId,
+        },
+        data: {
+          quantity: {
+            decrement: quantity,
+          },
+        },
+      });
+    }
+    // Decrement inventory for the product without variant or size
+    else {
+      await prisma.inventory.updateMany({
+        where: {
+          productId,
+        },
+        data: {
+          quantity: {
+            decrement: quantity,
+          },
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Error decrementing inventory:", error);
+    throw new Error("Failed to decrement inventory");
   }
 };

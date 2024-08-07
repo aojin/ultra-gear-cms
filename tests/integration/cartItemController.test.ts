@@ -10,10 +10,11 @@ describe("CartItem Controller", () => {
   let testUserId: number;
 
   beforeAll(async () => {
-    await prisma.$executeRaw`TRUNCATE TABLE "CartItem" RESTART IDENTITY CASCADE;`;
-    await prisma.$executeRaw`TRUNCATE TABLE "Cart" RESTART IDENTITY CASCADE;`;
-    await prisma.$executeRaw`TRUNCATE TABLE "Product" RESTART IDENTITY CASCADE;`;
-    await prisma.$executeRaw`TRUNCATE TABLE "User" RESTART IDENTITY CASCADE;`;
+    await prisma.$executeRaw`TRUNCATE TABLE "CartItem" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "Cart" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "Product" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "OrderItem" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "Order" CASCADE`;
 
     // Create a user for the test
     const user = await prisma.user.create({
@@ -57,8 +58,10 @@ describe("CartItem Controller", () => {
     const response = await request(app).post("/api/cart-items").send({
       cartId: testCartId,
       productId: testProductId,
-      cartQuantity: 2,
-      currentPrice: 19.99,
+      variantId: null, // or some valid variant ID
+      sizeId: null, // or some valid size ID
+      cartQuantity: 1,
+      currentPrice: 20.0,
     });
 
     expect(response.status).toBe(201);

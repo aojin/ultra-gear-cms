@@ -1,19 +1,21 @@
 import { PrismaClient, Product, Prisma } from "@prisma/client";
+import { CreateProductInput, UpdateProductInput } from "../types";
 
 const prisma = new PrismaClient();
 
-export type CreateProductInput = Omit<
-  Product,
-  "id" | "createdAt" | "updatedAt"
->;
-export type UpdateProductInput = Partial<CreateProductInput>;
-
+/**
+ * Creates a new product.
+ * @param data - The product data.
+ * @returns The created product.
+ */
 export const createProduct = async (
   data: CreateProductInput
 ): Promise<Product> => {
   try {
-    return await prisma.product.create({ data });
-  } catch (error) {
+    return await prisma.product.create({
+      data,
+    });
+  } catch (error: any) {
     console.error("Service: Error creating product:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new Error(
@@ -25,6 +27,10 @@ export const createProduct = async (
   }
 };
 
+/**
+ * Retrieves all products.
+ * @returns An array of all products.
+ */
 export const getAllProducts = async (): Promise<Product[]> => {
   try {
     return await prisma.product.findMany();
@@ -34,6 +40,11 @@ export const getAllProducts = async (): Promise<Product[]> => {
   }
 };
 
+/**
+ * Retrieves a product by its ID.
+ * @param id - The ID of the product.
+ * @returns The product, or null if not found.
+ */
 export const getProductById = async (id: number): Promise<Product | null> => {
   try {
     return await prisma.product.findUnique({ where: { id } });
@@ -43,6 +54,12 @@ export const getProductById = async (id: number): Promise<Product | null> => {
   }
 };
 
+/**
+ * Updates a product by its ID.
+ * @param id - The ID of the product.
+ * @param data - The product data to update.
+ * @returns The updated product.
+ */
 export const updateProduct = async (
   id: number,
   data: UpdateProductInput
@@ -64,6 +81,10 @@ export const updateProduct = async (
   }
 };
 
+/**
+ * Permanently deletes a product by its ID.
+ * @param id - The ID of the product.
+ */
 export const deleteProductPermanently = async (id: number): Promise<void> => {
   try {
     await prisma.product.delete({ where: { id } });
@@ -79,6 +100,11 @@ export const deleteProductPermanently = async (id: number): Promise<void> => {
   }
 };
 
+/**
+ * Archives a product by its ID.
+ * @param id - The ID of the product.
+ * @returns The archived product.
+ */
 export const archiveProduct = async (id: number): Promise<Product> => {
   try {
     return await prisma.product.update({
@@ -97,6 +123,11 @@ export const archiveProduct = async (id: number): Promise<Product> => {
   }
 };
 
+/**
+ * Unarchives a product by its ID.
+ * @param id - The ID of the product.
+ * @returns The unarchived product.
+ */
 export const unarchiveProduct = async (id: number): Promise<Product> => {
   try {
     return await prisma.product.update({

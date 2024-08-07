@@ -1,56 +1,36 @@
-import { PrismaClient, Cart, Prisma } from "@prisma/client";
+import { PrismaClient, Cart, Prisma, CartItem } from "@prisma/client";
+import { CreateCartItemInput } from "./cartItemService";
 
 const prisma = new PrismaClient();
 
-export interface CartItemInput {
-  productId: number;
-  variantId?: number | null;
-  sizeId?: number | null;
-  cartQuantity: number;
-  currentPrice: number;
-}
-
 export const createCart = async (
   userId: number,
-  items: CartItemInput[]
+  items: CreateCartItemInput[]
 ): Promise<Cart> => {
   try {
-    const userExists = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!userExists) {
-      throw new Error("User not found");
-    }
-
-    return await prisma.cart.create({
+    // Create cart with items
+    const cart = await prisma.cart.create({
       data: {
-        user: { connect: { id: userId } },
+        userId: userId,
         items: {
           create: items.map((item) => ({
-            product: { connect: { id: item.productId } },
-            variant: item.variantId
-              ? { connect: { id: item.variantId } }
-              : undefined,
-            size: item.sizeId ? { connect: { id: item.sizeId } } : undefined,
+            productId: item.productId,
+            variantId: item.variantId ?? null,
+            sizeId: item.sizeId ?? null,
             cartQuantity: item.cartQuantity,
             currentPrice: item.currentPrice,
           })),
         },
       },
       include: {
-        items: true,
+        items: true, // Include items if you need them in the response
       },
     });
+
+    return cart;
   } catch (error) {
     console.error("Service: Error creating cart:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to create cart");
-    }
+    throw new Error("Failed to create cart");
   }
 };
 
@@ -69,7 +49,7 @@ export const getAllCarts = async (): Promise<Cart[]> => {
 
 export const updateCart = async (
   id: number,
-  items: CartItemInput[]
+  items: CreateCartItemInput[]
 ): Promise<Cart> => {
   try {
     return await prisma.cart.update({
@@ -120,3 +100,43 @@ export const deleteCart = async (id: number): Promise<void> => {
     }
   }
 };
+
+export const getCartItemsByUserId = async (
+  userId: number
+): Promise<CartItem[]> => {
+  try {
+    const cart = await prisma.cartItem.findMany({
+      where: { cart: { userId } },
+      include: {
+        product: true,
+        variant: true,
+        size: true, // Include size if applicable
+      },
+    });
+
+    if (!cart) {
+      throw new Error("Cart not found");
+    }
+
+    return cart;
+  } catch (error) {
+    console.error("Service: Error fetching cart items by user ID:", error);
+    throw new Error("Service Error: Failed to fetch cart items by user ID");
+  }
+};
+
+export const clearCart = async (userId: number): Promise<void> => {
+  try {
+    await prisma.cartItem.deleteMany({
+      where: {
+        cart: {
+          userId,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Service: Error clearing cart:", error);
+    throw new Error("Service Error: Failed to clear cart");
+  }
+};
+export { CreateCartItemInput };

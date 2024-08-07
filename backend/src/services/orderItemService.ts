@@ -1,33 +1,48 @@
-import { PrismaClient, OrderItem, Prisma } from "@prisma/client";
+import { PrismaClient, OrderItem, CartItem, Prisma } from "@prisma/client";
+import { decrementInventory } from "./inventoryService";
 
 const prisma = new PrismaClient();
 
 export type CreateOrderItemInput = {
   orderId: number;
   productId: number;
-  variantId?: number;
+  productVariantId?: number;
   quantity: number;
   price: number;
   productName: string;
-  productVariantName?: string | null;
+  productVariantName?: string;
 };
 
 export const createOrderItem = async (
   data: CreateOrderItemInput
 ): Promise<OrderItem> => {
   try {
+    const product = await prisma.product.findUnique({
+      where: { id: data.productId },
+    });
+
+    if (!product) {
+      throw new Error(`Product with id ${data.productId} not found`);
+    }
+
+    const variant = data.productVariantId
+      ? await prisma.productVariant.findUnique({
+          where: { id: data.productVariantId },
+        })
+      : null;
+
     return await prisma.orderItem.create({
       data: {
         order: { connect: { id: data.orderId } },
         productId: data.productId,
-        productName: data.productName,
-        productVariantId: data.variantId,
-        productVariantName: data.productVariantName,
+        productVariantId: data.productVariantId,
+        productName: product.name,
+        productVariantName: variant ? variant.name : null,
         quantity: data.quantity,
         price: data.price,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service: Error creating order item:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new Error(
@@ -42,7 +57,7 @@ export const createOrderItem = async (
 export const getAllOrderItems = async (): Promise<OrderItem[]> => {
   try {
     return await prisma.orderItem.findMany();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service: Error fetching order items:", error);
     throw new Error("Service Error: Failed to fetch order items");
   }
@@ -55,7 +70,7 @@ export const getOrderItemById = async (
     return await prisma.orderItem.findUnique({
       where: { id },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service: Error fetching order item by ID:", error);
     throw new Error("Service Error: Failed to fetch order item by ID");
   }
@@ -68,7 +83,7 @@ export const getOrderItemsByOrderId = async (
     return await prisma.orderItem.findMany({
       where: { orderId },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service: Error fetching order items by order ID:", error);
     throw new Error("Service Error: Failed to fetch order items by order ID");
   }
@@ -83,7 +98,7 @@ export const updateOrderItem = async (
       where: { id },
       data,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service: Error updating order item:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new Error(
@@ -101,7 +116,7 @@ export const archiveOrderItem = async (id: number): Promise<OrderItem> => {
       where: { id },
       data: { archived: true },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service: Error archiving order item:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new Error(
@@ -118,7 +133,7 @@ export const deleteOrderItem = async (id: number): Promise<OrderItem> => {
     return await prisma.orderItem.delete({
       where: { id },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service: Error deleting order item:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new Error(
@@ -127,5 +142,49 @@ export const deleteOrderItem = async (id: number): Promise<OrderItem> => {
     } else {
       throw new Error("Service Error: Failed to delete order item");
     }
+  }
+};
+
+export const createOrderItems = async (
+  orderId: number,
+  cartItems: CartItem[]
+): Promise<OrderItem[]> => {
+  try {
+    const orderItems: OrderItem[] = [];
+
+    for (const cartItem of cartItems) {
+      const product = await prisma.product.findUnique({
+        where: { id: cartItem.productId },
+        select: { name: true },
+      });
+
+      const productVariant = cartItem.variantId
+        ? await prisma.productVariant.findUnique({
+            where: { id: cartItem.variantId },
+            select: { name: true },
+          })
+        : null;
+
+      if (product) {
+        const orderItem = await prisma.orderItem.create({
+          data: {
+            orderId,
+            productId: cartItem.productId,
+            productName: product.name,
+            productVariantId: cartItem.variantId ?? undefined,
+            productVariantName: productVariant?.name ?? null,
+            quantity: cartItem.cartQuantity,
+            price: cartItem.currentPrice,
+          },
+        });
+
+        orderItems.push(orderItem);
+      }
+    }
+
+    return orderItems;
+  } catch (error) {
+    console.error("Error creating order items:", error);
+    throw new Error("Failed to create order items");
   }
 };

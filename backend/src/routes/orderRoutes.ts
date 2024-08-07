@@ -11,7 +11,7 @@ import {
 
 const router = express.Router();
 
-router.post("/", createOrderHandler);
+router.post("/orders", createOrderHandler);
 router.get("/", getAllOrdersHandler);
 router.get("/:id", getOrderByIdHandler);
 router.put("/:id", updateOrderHandler);

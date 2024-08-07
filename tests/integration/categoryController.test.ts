@@ -1,8 +1,9 @@
+import { PrismaClient } from "@prisma/client";
 import request from "supertest";
 import app from "../../backend/src/app"; // Adjust the path as necessary
-import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
+
 let uncategorizedCategoryId: number;
 
 describe("Category Controller", () => {
@@ -11,7 +12,6 @@ describe("Category Controller", () => {
 
   beforeAll(async () => {
     originalConsoleError = console.error;
-    console.error = jest.fn(); // Mock console.error to prevent logging during tests
 
     // Ensure the "Uncategorized" category exists
     const uncategorizedCategory = await prisma.category.upsert({
@@ -26,7 +26,6 @@ describe("Category Controller", () => {
   });
 
   afterAll(async () => {
-    console.error = originalConsoleError; // Restore console.error after tests
     await prisma.$disconnect();
   });
 

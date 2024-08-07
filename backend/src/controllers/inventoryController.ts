@@ -140,10 +140,10 @@ export const incrementInventoryHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { id, amount } = req.body;
+  const { id, amount, variantId, sizeId } = req.body;
 
   try {
-    const inventory = await incrementInventory(id, amount);
+    const inventory = await incrementInventory(id, variantId, sizeId, amount);
     res.status(200).json(inventory);
   } catch (error: any) {
     console.error("Controller: Error incrementing inventory:", error);
@@ -155,10 +155,10 @@ export const decrementInventoryHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { id, amount } = req.body;
+  const { id, amount, variantId, sizeId } = req.body;
 
   try {
-    const inventory = await decrementInventory(id, amount);
+    const inventory = await decrementInventory(id, variantId, sizeId, amount);
     res.status(200).json(inventory);
   } catch (error: any) {
     console.error("Controller: Error decrementing inventory:", error);

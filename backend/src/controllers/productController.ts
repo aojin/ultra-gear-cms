@@ -13,33 +13,57 @@ export const createProductHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { name, description, msrpPrice, currentPrice, brand, model } = req.body;
-
-  if (!name || !description || !msrpPrice || !brand || !model) {
-    res.status(400).json({ error: "Missing required fields" });
-    return;
-  }
+  const {
+    name,
+    description,
+    brand,
+    model,
+    msrpPrice,
+    currentPrice,
+    onSale,
+    isSingleSize,
+    archived,
+    quantity,
+  } = req.body;
 
   try {
+    // Validate input data
+    const missingFields = [];
+    if (!name) missingFields.push("name");
+    if (!description) missingFields.push("description");
+    if (!brand) missingFields.push("brand");
+    if (!model) missingFields.push("model");
+    if (msrpPrice === undefined) missingFields.push("msrpPrice");
+
+    if (missingFields.length > 0) {
+      res.status(400).json({
+        error: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+      return;
+    }
+
+    // Set default value for currentPrice if not provided
+    const finalCurrentPrice =
+      currentPrice !== undefined ? currentPrice : msrpPrice;
+
+    // Create product
     const newProduct = await createProduct({
       name,
       description,
-      msrpPrice,
-      currentPrice: currentPrice || 0.0, // Default value if not provided
       brand,
       model,
-      onSale: false,
-      archived: false,
-      isSingleSize: false,
-      quantity: 0,
+      msrpPrice,
+      currentPrice: finalCurrentPrice,
+      onSale,
+      isSingleSize,
+      archived,
+      quantity,
     });
 
     res.status(201).json(newProduct);
-  } catch (error) {
-    console.error("Controller error: Error creating product:", error);
-    res.status(500).json({
-      error: (error as Error).message,
-    });
+  } catch (error: any) {
+    console.error("Controller: Error creating product:", error);
+    res.status(500).json({ error: "Failed to create product" });
   }
 };
 
@@ -51,7 +75,7 @@ export const getAllProductsHandler = async (
     const products = await getAllProducts();
     res.status(200).json(products);
   } catch (error) {
-    console.error("Controller error: Error getting all products:", error);
+    console.error("Controller: Error fetching products:", error);
     res.status(500).json({
       error: (error as Error).message,
     });
@@ -70,7 +94,7 @@ export const getProductByIdHandler = async (
       res.status(404).json({ error: "Product not found" });
     }
   } catch (error) {
-    console.error("Controller error: Error getting product by ID:", error);
+    console.error("Controller: Error fetching product by ID:", error);
     res.status(500).json({
       error: (error as Error).message,
     });
@@ -95,8 +119,20 @@ export const updateProductHandler = async (
     quantity,
   } = req.body;
 
-  if (!name || !description || !msrpPrice || !brand || !model) {
-    res.status(400).json({ error: "Missing required fields" });
+  // Check if at least one field is provided
+  if (
+    !name &&
+    !description &&
+    msrpPrice === undefined &&
+    currentPrice === undefined &&
+    !brand &&
+    !model &&
+    archived === undefined &&
+    onSale === undefined &&
+    isSingleSize === undefined &&
+    quantity === undefined
+  ) {
+    res.status(400).json({ error: "At least one field must be provided" });
     return;
   }
 
@@ -115,7 +151,7 @@ export const updateProductHandler = async (
     });
     res.status(200).json(product);
   } catch (error) {
-    console.error("Controller error: Error updating product:", error);
+    console.error("Controller: Error updating product:", error);
     res.status(500).json({
       error: (error as Error).message,
     });
@@ -131,10 +167,7 @@ export const deleteProductPermanentlyHandler = async (
     await deleteProductPermanently(parseInt(id, 10));
     res.status(204).end();
   } catch (error) {
-    console.error(
-      "Controller error: Error deleting product permanently:",
-      error
-    );
+    console.error("Controller: Error deleting product permanently:", error);
     res.status(500).json({
       error: (error as Error).message,
     });
@@ -147,10 +180,15 @@ export const archiveProductHandler = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
-    const product = await archiveProduct(parseInt(id, 10));
-    res.status(200).json(product);
+    const product = await getProductById(parseInt(id, 10));
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    const archivedProduct = await archiveProduct(parseInt(id, 10));
+    res.status(200).json(archivedProduct);
   } catch (error) {
-    console.error("Controller error: Error archiving product:", error);
+    console.error("Controller: Error archiving product:", error);
     res.status(500).json({
       error: (error as Error).message,
     });
@@ -163,10 +201,15 @@ export const unarchiveProductHandler = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
-    const product = await unarchiveProduct(parseInt(id, 10));
-    res.status(200).json(product);
+    const product = await getProductById(parseInt(id, 10));
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    const unarchivedProduct = await unarchiveProduct(parseInt(id, 10));
+    res.status(200).json(unarchivedProduct);
   } catch (error) {
-    console.error("Controller error: Error unarchiving product:", error);
+    console.error("Controller: Error unarchiving product:", error);
     res.status(500).json({
       error: (error as Error).message,
     });

@@ -14,8 +14,13 @@ describe("Cart Controller", () => {
     await prisma.$executeRaw`TRUNCATE TABLE "Product" RESTART IDENTITY CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "Cart" RESTART IDENTITY CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "CartItem" RESTART IDENTITY CASCADE`;
+  });
 
-    // Create necessary test data
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  test("should create a new cart", async () => {
     const user = await prisma.user.create({
       data: {
         email: "testuser@example.com",
@@ -37,22 +42,18 @@ describe("Cart Controller", () => {
     });
 
     testProductId = product.id;
-  });
 
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
-
-  it("should create a new cart", async () => {
     const response = await request(app)
-      .post("/api/carts")
+      .post("/cart")
       .send({
         userId: testUserId,
         items: [
           {
-            productId: testProductId,
+            productId: 1,
+            variantId: null,
+            sizeId: null,
             cartQuantity: 2,
-            currentPrice: 18.0,
+            currentPrice: 100,
           },
         ],
       });

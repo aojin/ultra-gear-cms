@@ -1,5 +1,4 @@
 import {
-  findUserById,
   createOrder,
   getAllOrders,
   getOrderById,
@@ -7,47 +6,53 @@ import {
   archiveOrder,
   unarchiveOrder,
   permanentlyDeleteOrder,
+  findUserById,
 } from "../services/orderService";
 import { Request, Response } from "express";
-
-type OrderItemInput = {
-  productId?: number;
-  variantId?: number;
-  quantity: number;
-  price: number;
-  productName: string;
-};
-
-type CreateOrderInput = {
-  userId: number;
-  totalAmount: number;
-  orderItems: OrderItemInput[];
-};
+import {
+  CreateOrderInput,
+  UpdateOrderInput,
+  UpdateOrderItemInput,
+} from "../types"; // Adjust the import path as necessary
 
 export const createOrderHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { userId, totalAmount, orderItems }: CreateOrderInput = req.body;
+  const { userId, totalAmount, orderItems } = req.body;
 
   try {
-    const user = await findUserById(userId);
-
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
+    if (
+      !userId ||
+      !totalAmount ||
+      !orderItems ||
+      !Array.isArray(orderItems) ||
+      orderItems.length === 0
+    ) {
+      res.status(400).json({ error: "Missing required fields" });
       return;
     }
 
-    const order = await createOrder({
-      userId: user.id,
-      totalAmount,
-      orderItems,
-    });
+    for (const item of orderItems) {
+      if (
+        !item.productId ||
+        !item.quantity ||
+        !item.price ||
+        !item.productName
+      ) {
+        res
+          .status(400)
+          .json({ error: "Order items are missing required fields" });
+        return;
+      }
+    }
 
-    res.status(201).json(order);
+    const newOrder = await createOrder(userId, totalAmount, orderItems);
+
+    res.status(201).json(newOrder);
   } catch (error) {
     console.error("Controller: Error creating order:", error);
-    res.status(500).json({ error: (error as Error).message });
+    res.status(500).json({ error: "Failed to create order" });
   }
 };
 
@@ -86,8 +91,7 @@ export const updateOrderHandler = async (
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const { userId, totalAmount, orderItems }: Partial<CreateOrderInput> =
-    req.body;
+  const { userId, totalAmount, orderItems }: UpdateOrderInput = req.body;
 
   try {
     const order = await updateOrder(parseInt(id, 10), {
@@ -122,6 +126,12 @@ export const archiveOrderHandler = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
+    const order = await getOrderById(parseInt(id, 10));
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
     const archivedOrder = await archiveOrder(parseInt(id, 10));
     res.status(200).json(archivedOrder);
   } catch (error) {
@@ -136,6 +146,12 @@ export const unarchiveOrderHandler = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
+    const order = await getOrderById(parseInt(id, 10));
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
     const unarchivedOrder = await unarchiveOrder(parseInt(id, 10));
     res.status(200).json(unarchivedOrder);
   } catch (error) {

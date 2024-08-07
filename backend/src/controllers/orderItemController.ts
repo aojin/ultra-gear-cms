@@ -19,14 +19,25 @@ export const createOrderItemHandler = async (
   const {
     orderId,
     productId,
-    variantId,
+    productVariantId,
     quantity,
     price,
+    productName,
+    productVariantName,
   }: CreateOrderItemInput = req.body;
 
-  if (!orderId || !productId || !quantity || !price) {
+  // Validate input
+  if (
+    !orderId ||
+    !productId ||
+    quantity === undefined ||
+    quantity <= 0 ||
+    price === undefined ||
+    price <= 0
+  ) {
     res.status(400).json({
-      error: "OrderId, productId, quantity, and price are required",
+      error:
+        "Invalid input: orderId, productId, quantity, and price are required. Quantity and price must be positive numbers.",
     });
     return;
   }
@@ -39,14 +50,16 @@ export const createOrderItemHandler = async (
       return;
     }
 
-    const variant = variantId ? await getProductVariantById(variantId) : null;
+    const variant = productVariantId
+      ? await getProductVariantById(productVariantId)
+      : null;
 
     const orderItem = await createOrderItem({
       orderId,
       productId,
       productName: product.name,
-      variantId,
-      productVariantName: variant ? variant.name : null,
+      productVariantId,
+      productVariantName: variant ? variant.name : undefined,
       quantity,
       price,
     });
