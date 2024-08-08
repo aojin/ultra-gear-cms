@@ -4,19 +4,21 @@ import {
   getAllOrdersHandler,
   getOrderByIdHandler,
   updateOrderHandler,
+  permanentlyDeleteOrderHandler,
   archiveOrderHandler,
   unarchiveOrderHandler,
-  permanentlyDeleteOrderHandler,
+  createOrderFromCartHandler,
 } from "../controllers/orderController";
 
 const router = express.Router();
 
-router.post("/orders", createOrderHandler);
+router.post("/", createOrderHandler);
 router.get("/", getAllOrdersHandler);
 router.get("/:id", getOrderByIdHandler);
 router.put("/:id", updateOrderHandler);
-router.put("/archive/:id", archiveOrderHandler);
 router.delete("/:id", permanentlyDeleteOrderHandler);
+router.put("/archive/:id", archiveOrderHandler);
 router.put("/unarchive/:id", unarchiveOrderHandler);
+router.post("/from-cart", createOrderFromCartHandler);
 
 export default router;

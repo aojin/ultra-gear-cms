@@ -54,9 +54,7 @@ export const createProductHandler = async (
       model,
       msrpPrice,
       currentPrice: finalCurrentPrice,
-      onSale,
       isSingleSize,
-      archived,
       quantity,
     });
 
@@ -144,8 +142,6 @@ export const updateProductHandler = async (
       currentPrice,
       brand,
       model,
-      archived,
-      onSale,
       isSingleSize,
       quantity,
     });

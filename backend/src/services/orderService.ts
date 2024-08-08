@@ -1,9 +1,5 @@
 import { PrismaClient, Order, Prisma } from "@prisma/client";
-import {
-  CreateOrderItemInput,
-  UpdateOrderItemInput,
-  UpdateOrderInput,
-} from "../types";
+import { CreateOrderItemInput, UpdateOrderInput } from "../types";
 
 const prisma = new PrismaClient();
 
@@ -28,20 +24,30 @@ export const findUserById = async (userId: number) => {
 
 export const createOrder = async (
   userId: number,
-  totalAmount: number,
-  orderItems: Array<{
-    productId: number;
-    quantity: number;
-    price: number;
-    productName: string;
-  }>
+  orderItems: CreateOrderItemInput[]
 ): Promise<Order> => {
+  const user = await findUserById(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
   return await prisma.order.create({
     data: {
       userId,
-      totalAmount,
+      userName: user.name,
+      userEmail: user.email,
+      userAddress1: user.address1,
+      userAddress2: user.address2,
+      userPhoneNumber: user.phoneNumber,
       orderItems: {
-        create: orderItems,
+        create: orderItems.map((item) => ({
+          productId: item.productId,
+          productVariantId: item.productVariantId || null,
+          quantity: item.quantity ?? 0, // Ensure quantity is always a number
+          price: item.price ?? 0.0, // Ensure price is always a number
+          productName: item.productName || "", // Ensure productName is always a string
+        })),
       },
     },
     include: {
@@ -98,16 +104,15 @@ export const updateOrder = async (
       where: { id },
       data: {
         userId: data.userId,
-        totalAmount: data.totalAmount,
         orderItems: data.orderItems
           ? {
               deleteMany: {}, // Clear existing order items
               create: data.orderItems.map((item) => ({
                 productId: item.productId,
-                productVariantId: item.productVariantId,
-                quantity: item.quantity,
-                price: item.price,
-                productName: item.productName,
+                productVariantId: item.productVariantId || null,
+                quantity: item.quantity ?? 0, // Ensure quantity is always a number
+                price: item.price ?? 0.0, // Ensure price is always a number
+                productName: item.productName || "", // Ensure productName is always a string
               })),
             }
           : undefined,
@@ -172,59 +177,5 @@ export const unarchiveOrder = async (id: number): Promise<Order> => {
     } else {
       throw new Error("Service Error: Failed to unarchive order");
     }
-  }
-};
-
-export const decrementInventory = async (
-  productId: number,
-  quantity: number,
-  variantId?: number | null,
-  sizeId?: number | null
-): Promise<void> => {
-  try {
-    // Decrement inventory for the size, if sizeId is provided
-    if (sizeId) {
-      await prisma.inventory.updateMany({
-        where: {
-          productId,
-          sizeId,
-        },
-        data: {
-          quantity: {
-            decrement: quantity,
-          },
-        },
-      });
-    }
-    // Decrement inventory for the variant, if variantId is provided
-    else if (variantId) {
-      await prisma.inventory.updateMany({
-        where: {
-          productId,
-          variantId,
-        },
-        data: {
-          quantity: {
-            decrement: quantity,
-          },
-        },
-      });
-    }
-    // Decrement inventory for the product without variant or size
-    else {
-      await prisma.inventory.updateMany({
-        where: {
-          productId,
-        },
-        data: {
-          quantity: {
-            decrement: quantity,
-          },
-        },
-      });
-    }
-  } catch (error) {
-    console.error("Error decrementing inventory:", error);
-    throw new Error("Failed to decrement inventory");
   }
 };

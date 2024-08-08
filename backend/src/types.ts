@@ -1,32 +1,37 @@
-// Define the base type for shared fields
+import { Cart, CartItem, Product } from "@prisma/client";
+
+// Base type for shared fields
 export type BaseProductInput = {
   name: string;
-  description: string;
   msrpPrice: number;
-  brand: string;
-  model: string;
   isSingleSize: boolean;
-  currentPrice?: number; // Optional with a default value in the model
-  onSale?: boolean; // Optional with a default value in the model
-  quantity?: number; // Optional with a default value in the model
-  archived?: boolean; // Optional with a default value in the model
+  currentPrice?: number;
+  quantity?: number;
 };
 
-// Define the CreateProductInput type extending the base type
-export type CreateProductInput = BaseProductInput;
+// Create and Update Product types
+export type CreateProductInput = BaseProductInput & {
+  description: string;
+  brand: string;
+  model: string;
+};
 
-// Define the CreateProductVariantInput type extending the base type and adding productId
+export type UpdateProductInput = Partial<CreateProductInput>;
+
+// Create and Update Product Variant types
 export type CreateProductVariantInput = BaseProductInput & {
   productId: number;
 };
 
-// Define the UpdateProductInput type making all fields optional
-export type UpdateProductInput = Partial<CreateProductInput>;
-
-// Define the UpdateProductVariantInput type making all fields optional
 export type UpdateProductVariantInput = Partial<CreateProductVariantInput>;
 
-// Define the type for CreateCartItemInput
+// Cart and CartItem types
+export type CartWithItems = Cart & {
+  items: (CartItem & {
+    product: Product;
+  })[];
+};
+
 export type CreateCartItemInput = {
   cartId: number;
   productId: number;
@@ -36,23 +41,19 @@ export type CreateCartItemInput = {
   currentPrice: number;
 };
 
-// Define the UpdateCartItemInput type making all fields optional
 export type UpdateCartItemInput = Partial<CreateCartItemInput>;
 
-// Define the type for CreateSizeInput
+// Create and Update Size types
 export type CreateSizeInput = {
   size: string;
   quantity: number;
   productId?: number | null;
   variantId?: number | null;
-  productName?: string | null;
-  variantName?: string | null;
 };
 
-// Define the UpdateSizeInput type making all fields optional
 export type UpdateSizeInput = Partial<CreateSizeInput>;
 
-// Define the type for CreateProductImageInput
+// Create and Update Product Image types
 export type CreateProductImageInput = {
   url: string;
   order: number;
@@ -60,29 +61,26 @@ export type CreateProductImageInput = {
   productId?: number | null;
 };
 
-// Define the UpdateProductImageInput type making all fields optional
 export type UpdateProductImageInput = Partial<CreateProductImageInput>;
 
-// Define the type for CreateCategoryInput
+// Create and Update Category types
 export type CreateCategoryInput = {
   name: string;
   description?: string | null;
 };
 
-// Define the UpdateCategoryInput type making all fields optional
 export type UpdateCategoryInput = Partial<CreateCategoryInput>;
 
-// Define the type for CreateSubCategoryInput
+// Create and Update SubCategory types
 export type CreateSubCategoryInput = {
   name: string;
   description?: string | null;
   categoryId: number;
 };
 
-// Define the UpdateSubCategoryInput type making all fields optional
 export type UpdateSubCategoryInput = Partial<CreateSubCategoryInput>;
 
-// Define the type for CreateUserInput
+// Create and Update User types
 export type CreateUserInput = {
   email: string;
   password: string;
@@ -92,10 +90,9 @@ export type CreateUserInput = {
   phoneNumber?: string | null;
 };
 
-// Define the UpdateUserInput type making all fields optional
 export type UpdateUserInput = Partial<CreateUserInput>;
 
-// Define the type for CreateReviewInput
+// Create and Update Review types
 export type CreateReviewInput = {
   userName: string;
   userEmail: string;
@@ -105,29 +102,31 @@ export type CreateReviewInput = {
   userId?: number | null;
 };
 
-// Define the UpdateReviewInput type making all fields optional
 export type UpdateReviewInput = Partial<CreateReviewInput>;
 
-// Define the type for CreateCartInput
+// Create and Update Cart types
 export type CreateCartInput = {
   userId: number;
 };
 
-// Define the UpdateCartInput type making all fields optional
 export type UpdateCartInput = Partial<CreateCartInput>;
 
-// Define the type for CreateOrderItemInput
+// Create and Update Order Item types
 export type CreateOrderItemInput = {
   orderId: number;
-  productId?: number | null;
-  productName: string;
-  productVariantId?: number | null;
-  productVariantName?: string | null;
+  productId: number;
+  productVariantId?: number;
   quantity: number;
   price: number;
+  productName: string;
+  productVariantName?: string;
+  sizeId?: number;
+  size?: string;
 };
 
-// Define the type for CreateOrderInput
+export type UpdateOrderItemInput = Partial<CreateOrderItemInput>;
+
+// Create and Update Order types
 export type CreateOrderInput = {
   userId?: number | null;
   userName?: string | null;
@@ -138,21 +137,11 @@ export type CreateOrderInput = {
   totalAmount?: number;
 };
 
-export type UpdateOrderItemInput = {
-  productId: number;
-  productVariantId?: number;
-  quantity: number;
-  price: number;
-  productName: string;
-};
-
-export type UpdateOrderInput = {
-  userId?: number;
-  totalAmount?: number;
+export type UpdateOrderInput = Partial<CreateOrderInput> & {
   orderItems?: UpdateOrderItemInput[];
 };
 
-// Define the type for CreateInventoryInput
+// Create and Update Inventory types
 export type CreateInventoryInput = {
   productId?: number | null;
   variantId?: number | null;
@@ -160,10 +149,12 @@ export type CreateInventoryInput = {
   quantity: number;
 };
 
-// Define the UpdateInventoryInput type making all fields optional
 export type UpdateInventoryInput = Partial<CreateInventoryInput>;
 
-// Define the type for CreateSaleInput
+// Define Operation type
+export type Operation = "increment" | "decrement";
+
+// Create and Update Sale types
 export type CreateSaleInput = {
   name: string;
   title: string;
@@ -174,10 +165,9 @@ export type CreateSaleInput = {
   saleAmount?: number | null;
 };
 
-// Define the UpdateSaleInput type making all fields optional
 export type UpdateSaleInput = Partial<CreateSaleInput>;
 
-// Define the type for CreatePromoCodeInput
+// Create and Update PromoCode types
 export type CreatePromoCodeInput = {
   code: string;
   validFrom: Date;
@@ -185,15 +175,13 @@ export type CreatePromoCodeInput = {
   saleId: number;
 };
 
-// Define the UpdatePromoCodeInput type making all fields optional
 export type UpdatePromoCodeInput = Partial<CreatePromoCodeInput>;
 
-// Define the type for CreatePackageInput
+// Create and Update Package types
 export type CreatePackageInput = {
   name: string;
   description?: string | null;
   price: number;
 };
 
-// Define the UpdatePackageInput type making all fields optional
 export type UpdatePackageInput = Partial<CreatePackageInput>;

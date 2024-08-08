@@ -1,5 +1,5 @@
 import { PrismaClient, OrderItem, CartItem, Prisma } from "@prisma/client";
-import { decrementInventory } from "./inventoryService";
+import { findInventoryId, updateInventory } from "./inventoryService";
 
 const prisma = new PrismaClient();
 
@@ -11,6 +11,8 @@ export type CreateOrderItemInput = {
   price: number;
   productName: string;
   productVariantName?: string;
+  sizeId?: number;
+  size?: string;
 };
 
 export const createOrderItem = async (
@@ -31,6 +33,12 @@ export const createOrderItem = async (
         })
       : null;
 
+    const size = data.sizeId
+      ? await prisma.size.findUnique({
+          where: { id: data.sizeId },
+        })
+      : null;
+
     return await prisma.orderItem.create({
       data: {
         order: { connect: { id: data.orderId } },
@@ -38,6 +46,8 @@ export const createOrderItem = async (
         productVariantId: data.productVariantId,
         productName: product.name,
         productVariantName: variant ? variant.name : null,
+        sizeId: data.sizeId,
+        size: size ? size.size : null,
         quantity: data.quantity,
         price: data.price,
       },
@@ -51,6 +61,71 @@ export const createOrderItem = async (
     } else {
       throw new Error("Service Error: Failed to create order item");
     }
+  }
+};
+
+export const createOrderItems = async (
+  orderId: number,
+  cartItems: CartItem[]
+): Promise<OrderItem[]> => {
+  try {
+    const orderItems: OrderItem[] = [];
+
+    for (const cartItem of cartItems) {
+      const product = await prisma.product.findUnique({
+        where: { id: cartItem.productId },
+        select: { name: true },
+      });
+
+      const productVariant = cartItem.variantId
+        ? await prisma.productVariant.findUnique({
+            where: { id: cartItem.variantId },
+            select: { name: true },
+          })
+        : null;
+
+      const size = cartItem.sizeId
+        ? await prisma.size.findUnique({
+            where: { id: cartItem.sizeId },
+            select: { size: true },
+          })
+        : null;
+
+      if (product) {
+        const orderItem = await prisma.orderItem.create({
+          data: {
+            orderId,
+            productId: cartItem.productId,
+            productName: product.name,
+            productVariantId: cartItem.variantId ?? undefined,
+            productVariantName: productVariant?.name ?? null,
+            sizeId: cartItem.sizeId ?? undefined,
+            size: size?.size ?? null,
+            quantity: cartItem.cartQuantity,
+            price: cartItem.currentPrice,
+          },
+        });
+
+        const inventoryId = await findInventoryId(
+          cartItem.productId,
+          cartItem.variantId ?? undefined,
+          cartItem.sizeId ?? undefined
+        );
+
+        if (inventoryId) {
+          console.log(`Beginning decrement on: id: ${inventoryId}`);
+
+          await updateInventory(inventoryId, cartItem.cartQuantity, 'decrement');
+        }
+
+        orderItems.push(orderItem);
+      }
+    }
+
+    return orderItems;
+  } catch (error) {
+    console.error("Error creating order items:", error);
+    throw new Error("Failed to create order items");
   }
 };
 
@@ -142,49 +217,5 @@ export const deleteOrderItem = async (id: number): Promise<OrderItem> => {
     } else {
       throw new Error("Service Error: Failed to delete order item");
     }
-  }
-};
-
-export const createOrderItems = async (
-  orderId: number,
-  cartItems: CartItem[]
-): Promise<OrderItem[]> => {
-  try {
-    const orderItems: OrderItem[] = [];
-
-    for (const cartItem of cartItems) {
-      const product = await prisma.product.findUnique({
-        where: { id: cartItem.productId },
-        select: { name: true },
-      });
-
-      const productVariant = cartItem.variantId
-        ? await prisma.productVariant.findUnique({
-            where: { id: cartItem.variantId },
-            select: { name: true },
-          })
-        : null;
-
-      if (product) {
-        const orderItem = await prisma.orderItem.create({
-          data: {
-            orderId,
-            productId: cartItem.productId,
-            productName: product.name,
-            productVariantId: cartItem.variantId ?? undefined,
-            productVariantName: productVariant?.name ?? null,
-            quantity: cartItem.cartQuantity,
-            price: cartItem.currentPrice,
-          },
-        });
-
-        orderItems.push(orderItem);
-      }
-    }
-
-    return orderItems;
-  } catch (error) {
-    console.error("Error creating order items:", error);
-    throw new Error("Failed to create order items");
   }
 };

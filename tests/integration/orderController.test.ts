@@ -25,7 +25,6 @@ describe("Order Controller", () => {
       .post("/api/orders")
       .send({
         userId: user.id,
-        totalAmount: 100.0,
         orderItems: [
           {
             productId: 1,
@@ -38,7 +37,6 @@ describe("Order Controller", () => {
       });
 
     expect(response.status).toBe(201);
-    expect(response.body.totalAmount).toBe(100.0);
     expect(response.body.orderItems.length).toBe(1);
     expect(response.body.orderItems[0].productName).toBe("Test Product");
 
@@ -62,7 +60,6 @@ describe("Order Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 150.0,
         orderItems: {
           create: [
             {
@@ -102,7 +99,6 @@ describe("Order Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 200.0,
         orderItems: {
           create: [
             {
@@ -144,7 +140,6 @@ describe("Order Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 250.0,
         orderItems: {
           create: [
             {
@@ -154,6 +149,13 @@ describe("Order Controller", () => {
               price: 50.0,
               productName: "Test Product 4",
             },
+            {
+              productId: 8,
+              productVariantId: 5,
+              quantity: 6,
+              price: 50.0,
+              productName: "Updated Product",
+            },
           ],
         },
       },
@@ -162,7 +164,6 @@ describe("Order Controller", () => {
     const response = await request(app)
       .put(`/api/orders/${order.id}`)
       .send({
-        totalAmount: 300.0,
         orderItems: [
           {
             productId: 5,
@@ -175,7 +176,6 @@ describe("Order Controller", () => {
       });
 
     expect(response.status).toBe(200);
-    expect(response.body.totalAmount).toBe(300.0);
     expect(response.body.orderItems).toBeDefined(); // Ensure orderItems is defined
     expect(response.body.orderItems.length).toBe(1);
     expect(response.body.orderItems[0].productName).toBe("Updated Product");
@@ -200,7 +200,6 @@ describe("Order Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 350.0,
         orderItems: {
           create: [
             {
@@ -240,7 +239,6 @@ describe("Order Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 400.0,
         orderItems: {
           create: [
             {
@@ -283,7 +281,6 @@ describe("Order Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 450.0,
         orderItems: {
           create: [
             {
@@ -327,7 +324,6 @@ describe("Order Controller", () => {
       .post("/api/orders")
       .send({
         userId: user.id,
-        totalAmount: 500.0,
         orderItems: [
           {
             productId: 9,
@@ -340,7 +336,6 @@ describe("Order Controller", () => {
       });
 
     expect(response.status).toBe(201);
-    expect(response.body.totalAmount).toBe(500.0);
     expect(response.body.userName).toBe("Test User 8");
     expect(response.body.userEmail).toBe("testuser8@example.com");
     expect(response.body.userAddress1).toBe("130 Test St");
@@ -353,6 +348,159 @@ describe("Order Controller", () => {
     await request(app).delete(`/api/orders/${newOrderId}`);
     await prisma.orderItem.deleteMany();
     await prisma.order.deleteMany();
+    await prisma.user.deleteMany();
+  });
+
+  it.only("should create an order from cart items and decrement inventory", async () => {
+    const user = await prisma.user.create({
+      data: {
+        email: "testuser@example.com",
+        password: "password",
+        name: "Test User",
+        address1: "123 Test St",
+        address2: "Apt 4",
+        phoneNumber: "123-456-7890",
+      },
+    });
+
+    const product = await prisma.product.create({
+      data: {
+        name: "Test Product",
+        description: "A test product",
+        msrpPrice: 100,
+        currentPrice: 80,
+        brand: "TestBrand",
+        model: "TB123",
+        quantity: 10,
+      },
+    });
+
+    const variant = await prisma.productVariant.create({
+      data: {
+        name: "Test Variant",
+        msrpPrice: 90,
+        currentPrice: 70,
+        productId: product.id,
+        quantity: 5,
+      },
+    });
+
+    const sizeM = await prisma.size.create({
+      data: {
+        size: "M",
+        quantity: 3,
+        variantId: variant.id,
+      },
+    });
+
+    const sizeL = await prisma.size.create({
+      data: {
+        size: "L",
+        quantity: 2,
+        variantId: variant.id,
+      },
+    });
+
+    await prisma.inventory.createMany({
+      data: [
+        {
+          productId: product.id,
+          variantId: variant.id,
+          sizeId: sizeM.id,
+          quantity: 3,
+        },
+        {
+          productId: product.id,
+          variantId: variant.id,
+          sizeId: sizeL.id,
+          quantity: 2,
+        },
+      ],
+    });
+
+    const cart = await prisma.cart.create({
+      data: {
+        userId: user.id,
+      },
+    });
+
+    const cartItem1 = await prisma.cartItem.create({
+      data: {
+        cartId: cart.id,
+        productId: product.id,
+        variantId: variant.id,
+        sizeId: sizeM.id,
+        cartQuantity: 2,
+        currentPrice: 70,
+      },
+    });
+
+    const cartItem2 = await prisma.cartItem.create({
+      data: {
+        cartId: cart.id,
+        productId: product.id,
+        variantId: variant.id,
+        sizeId: sizeL.id,
+        cartQuantity: 1,
+        currentPrice: 70,
+      },
+    });
+
+    // Log cart items
+    const cartItems = await prisma.cartItem.findMany({
+      where: { cartId: cart.id },
+    });
+
+    const order = await prisma.order.create({
+      data: {
+        userId: user.id,
+      },
+    });
+
+    const response = await request(app).post("/api/orders/from-cart").send({
+      orderId: order.id,
+      cartId: cart.id,
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.length).toBe(2);
+    expect(response.body[0].productName).toBe("Test Product");
+    expect(response.body[1].productName).toBe("Test Product");
+
+    // Check inventory
+    const updatedProduct = await prisma.product.findUnique({
+      where: { id: product.id },
+    });
+    console.log({ updatedProduct });
+    const updatedVariant = await prisma.productVariant.findUnique({
+      where: { id: variant.id },
+    });
+    console.log({ updatedVariant });
+    const updatedSizeM = await prisma.size.findUnique({
+      where: { id: sizeM.id },
+    });
+    console.log({ updatedSizeM });
+    const updatedSizeL = await prisma.size.findUnique({
+      where: { id: sizeL.id },
+    });
+    console.log({ updatedSizeL });
+
+    if (!updatedProduct || !updatedVariant || !updatedSizeM || !updatedSizeL) {
+      throw new Error("Updated product, variant, or size not found");
+    }
+
+    expect(updatedProduct.quantity).toBe(7); // 10 - 3
+    expect(updatedVariant.quantity).toBe(2); // 5 - 3
+    expect(updatedSizeM.quantity).toBe(1); // 3 - 2
+    expect(updatedSizeL.quantity).toBe(1); // 2 - 1
+
+    // Clean up
+    await prisma.orderItem.deleteMany();
+    await prisma.cartItem.deleteMany();
+    await prisma.cart.deleteMany();
+    await prisma.size.deleteMany();
+    await prisma.productVariant.deleteMany();
+    await prisma.product.deleteMany();
     await prisma.user.deleteMany();
   });
 });

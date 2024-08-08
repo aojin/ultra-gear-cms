@@ -6,10 +6,9 @@ import {
   getInventoryByVariantId,
   updateInventory,
   deleteInventory,
-  incrementInventory,
-  decrementInventory,
 } from "../services/inventoryService";
 import { Request, Response } from "express";
+import { Operation } from "../types"; // Import Operation type
 
 export const createInventoryHandler = async (
   req: Request,
@@ -96,32 +95,6 @@ export const getInventoryByVariantIdHandler = async (
   }
 };
 
-export const updateInventoryHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { id } = req.params;
-  const { productId, variantId, sizeId, quantity } = req.body;
-
-  if (quantity === undefined) {
-    res.status(400).json({ error: "Quantity is required" });
-    return;
-  }
-
-  try {
-    const inventory = await updateInventory(parseInt(id, 10), {
-      productId,
-      variantId,
-      sizeId,
-      quantity,
-    });
-    res.status(200).json(inventory);
-  } catch (error: any) {
-    console.error("Controller: Error updating inventory:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
 export const deleteInventoryHandler = async (
   req: Request,
   res: Response
@@ -136,32 +109,27 @@ export const deleteInventoryHandler = async (
   }
 };
 
-export const incrementInventoryHandler = async (
+export const updateInventoryHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { id, amount, variantId, sizeId } = req.body;
+  const { id } = req.params;
+  const {
+    amount,
+    operation,
+  }: { amount: number; operation: "increment" | "decrement" } = req.body;
 
   try {
-    const inventory = await incrementInventory(id, variantId, sizeId, amount);
-    res.status(200).json(inventory);
-  } catch (error: any) {
-    console.error("Controller: Error incrementing inventory:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const decrementInventoryHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { id, amount, variantId, sizeId } = req.body;
-
-  try {
-    const inventory = await decrementInventory(id, variantId, sizeId, amount);
-    res.status(200).json(inventory);
-  } catch (error: any) {
-    console.error("Controller: Error decrementing inventory:", error);
-    res.status(500).json({ error: error.message });
+    const updatedInventory = await updateInventory(
+      parseInt(id, 10),
+      amount,
+      operation
+    );
+    res.status(200).json(updatedInventory);
+  } catch (error) {
+    console.error("Controller Error: Updating inventory:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the inventory." });
   }
 };

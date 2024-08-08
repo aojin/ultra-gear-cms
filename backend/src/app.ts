@@ -24,7 +24,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/product-variants", productVariantRoutes);
 app.use("/api/product-images", productImageRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/cart", cartRoutes);
+app.use("/api/carts", cartRoutes);
 app.use("/api/cart-items", cartItemRoutes);
 app.use("/api/inventories", inventoryRoutes);
 app.use("/api/reviews", reviewRoutes);

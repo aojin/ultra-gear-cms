@@ -4,8 +4,8 @@ import {
   getAllCartItems,
   updateCartItem,
   deleteCartItem,
-  CreateCartItemInput,
 } from "../services/cartItemService";
+import { CreateCartItemInput } from "../types";
 
 export const createCartItemHandler = async (
   req: Request,

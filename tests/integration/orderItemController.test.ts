@@ -47,7 +47,6 @@ describe("OrderItem Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 100.0,
       },
     });
 
@@ -95,7 +94,6 @@ describe("OrderItem Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 200.0,
       },
     });
 
@@ -146,7 +144,6 @@ describe("OrderItem Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 300.0,
       },
     });
 
@@ -197,7 +194,6 @@ describe("OrderItem Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 400.0,
       },
     });
 
@@ -254,7 +250,6 @@ describe("OrderItem Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 500.0,
       },
     });
 
@@ -307,7 +302,6 @@ describe("OrderItem Controller", () => {
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        totalAmount: 600.0,
       },
     });
 
@@ -331,110 +325,5 @@ describe("OrderItem Controller", () => {
       `/api/order-items/${orderItem.id}`
     );
     expect(getOrderItem.status).toBe(404);
-  });
-
-  it("should convert cart items to order items and decrement inventory", async () => {
-    const user = await prisma.user.create({
-      data: {
-        email: "testuser@example.com",
-        password: "password",
-        name: "Test User",
-        address1: "123 Test St",
-        address2: "Apt 4",
-        phoneNumber: "123-456-7890",
-      },
-    });
-
-    const product = await prisma.product.create({
-      data: {
-        name: "Test Product",
-        description: "A test product",
-        msrpPrice: 100,
-        currentPrice: 80,
-        brand: "TestBrand",
-        model: "TB123",
-        quantity: 10,
-      },
-    });
-
-    const variant = await prisma.productVariant.create({
-      data: {
-        name: "Test Variant",
-        msrpPrice: 90,
-        currentPrice: 70,
-        productId: product.id,
-        quantity: 5,
-      },
-    });
-
-    const size = await prisma.size.create({
-      data: {
-        size: "M",
-        quantity: 3,
-        variantId: variant.id,
-      },
-    });
-
-    const cart = await prisma.cart.create({
-      data: {
-        userId: user.id,
-      },
-    });
-
-    const cartItem = await prisma.cartItem.create({
-      data: {
-        cartId: cart.id,
-        productId: product.id,
-        variantId: variant.id,
-        sizeId: size.id,
-        cartQuantity: 2,
-        currentPrice: 70,
-      },
-    });
-
-    const order = await prisma.order.create({
-      data: {
-        userId: user.id,
-        totalAmount: 140.0,
-      },
-    });
-
-    const response = await request(app)
-      .post("/api/order-items/from-cart")
-      .send({
-        orderId: order.id,
-        cartId: cart.id,
-      });
-
-    expect(response.status).toBe(201);
-    expect(response.body.length).toBe(1);
-    expect(response.body[0].productName).toBe("Test Product");
-
-    // Check inventory
-    const updatedProduct = await prisma.product.findUnique({
-      where: { id: product.id },
-    });
-    const updatedVariant = await prisma.productVariant.findUnique({
-      where: { id: variant.id },
-    });
-    const updatedSize = await prisma.size.findUnique({
-      where: { id: size.id },
-    });
-
-    if (!updatedProduct || !updatedVariant || !updatedSize) {
-      throw new Error("Updated product, variant, or size not found");
-    }
-
-    expect(updatedProduct.quantity).toBe(8); // 10 - 2
-    expect(updatedVariant.quantity).toBe(3); // 5 - 2
-    expect(updatedSize.quantity).toBe(1); // 3 - 2
-
-    await prisma.orderItem.deleteMany();
-    await prisma.cartItem.deleteMany();
-    await prisma.cart.deleteMany();
-    await prisma.size.deleteMany();
-    await prisma.productVariant.deleteMany();
-    await prisma.product.deleteMany();
-    await prisma.user.deleteMany();
   });
 });

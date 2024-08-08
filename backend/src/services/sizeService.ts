@@ -1,37 +1,53 @@
 import { PrismaClient, Size, Prisma } from "@prisma/client";
+import { CreateSizeInput } from "../types";
+import { updateProductTotalQuantity } from "./productVariantService"; // Import the function from the variant service
+import { UpdateSizeInput } from "../types";
 
 const prisma = new PrismaClient();
 
-export type CreateSizeInput = {
-  size: string;
-  quantity: number;
-  productId?: number | null;
-  variantId?: number | null;
-};
+export const createSize = async (data: CreateSizeInput) => {
+  const newSize = await prisma.size.create({
+    data: {
+      ...data,
+      quantity: data.quantity || 0, // Initialize size quantity
+    },
+  });
 
-export type UpdateSizeInput = {
-  size?: string;
-  quantity?: number;
-};
-
-export const createSize = async (data: CreateSizeInput): Promise<Size> => {
-  try {
-    return await prisma.size.create({
-      data: {
-        size: data.size,
-        quantity: data.quantity,
-        productId: data.productId || null,
-        variantId: data.variantId || null,
-      },
-    });
-  } catch (error) {
-    console.error("Service Error: Creating size:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error("Service Error: Known request error occurred");
-    } else {
-      throw new Error("Service Error: Failed to create size");
-    }
+  if (data.variantId) {
+    // Update variant quantity to be the sum of all size quantities
+    await updateVariantTotalQuantity(data.variantId);
   }
+
+  return newSize;
+};
+
+const updateVariantTotalQuantity = async (variantId: number) => {
+  const totalQuantity = await getVariantTotalQuantity(variantId);
+
+  await prisma.productVariant.update({
+    where: { id: variantId },
+    data: {
+      quantity: totalQuantity,
+    },
+  });
+
+  // Get the productId related to the variant
+  const variant = await prisma.productVariant.findUnique({
+    where: { id: variantId },
+  });
+
+  if (variant) {
+    // Update product quantity as well
+    await updateProductTotalQuantity(variant.productId);
+  }
+};
+
+const getVariantTotalQuantity = async (variantId: number) => {
+  const sizes = await prisma.size.findMany({
+    where: { variantId },
+  });
+
+  return sizes.reduce((total, size) => total + (size.quantity || 0), 0);
 };
 
 export const getAllSizes = async (): Promise<Size[]> => {
@@ -85,13 +101,20 @@ export const updateSize = async (
   data: UpdateSizeInput
 ): Promise<Size> => {
   try {
-    return await prisma.size.update({
+    const updatedSize = await prisma.size.update({
       where: { id },
       data: {
         ...data,
         updatedAt: new Date(),
       },
     });
+
+    if (updatedSize.variantId) {
+      // Update variant quantity to be the sum of all size quantities
+      await updateVariantTotalQuantity(updatedSize.variantId);
+    }
+
+    return updatedSize;
   } catch (error) {
     console.error("Service Error: Updating size:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

@@ -50,8 +50,6 @@ export const createProductVariantHandler = async (
       currentPrice,
       productId,
       isSingleSize,
-      quantity,
-      archived,
     });
     res.status(201).json(productVariant);
   } catch (error) {
@@ -121,7 +119,6 @@ export const updateProductVariantHandler = async (
         currentPrice,
         isSingleSize,
         quantity,
-        archived,
       }
     );
     res.status(200).json(productVariant);

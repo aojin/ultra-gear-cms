@@ -11,4 +11,5 @@ module.exports = {
   transformIgnorePatterns: ["<rootDir>/node_modules/"],
   globalSetup: "<rootDir>/tests/integration/setup.ts",
   globalTeardown: "<rootDir>/tests/integration/teardown.ts",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"], // Add this line to include setup file
 };

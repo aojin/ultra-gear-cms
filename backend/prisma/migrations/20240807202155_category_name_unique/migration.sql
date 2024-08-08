@@ -1,0 +1,12 @@
+-- AlterTable
+ALTER TABLE "CartItem" ALTER COLUMN "updatedAt" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "Order" ALTER COLUMN "totalAmount" DROP NOT NULL,
+ALTER COLUMN "totalAmount" SET DEFAULT 0.00;
+
+-- AlterTable
+ALTER TABLE "Product" ALTER COLUMN "msrpPrice" SET DEFAULT 0.0,
+ALTER COLUMN "currentPrice" DROP NOT NULL,
+ALTER COLUMN "onSale" DROP NOT NULL,
+ALTER COLUMN "archived" DROP NOT NULL;

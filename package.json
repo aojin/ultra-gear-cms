@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "generate:dev": "dotenv -e .env -- prisma generate --schema=backend/prisma/schema.prisma",
-    "migrate:dev": "dotenv -e .env -- prisma migrate dev --schema=backend/prisma/schema.prisma --name category-name-unique",
+    "migrate:dev": "dotenv -e .env -- prisma migrate dev --schema=backend/prisma/schema.prisma --name update-quantity",
     "generate:test": "dotenv -e .env.test -- prisma generate --schema=backend/prisma/schema.prisma",
-    "migrate:test": "dotenv -e .env.test -- prisma migrate dev --schema=backend/prisma/schema.prisma --name category-name-unique",
+    "migrate:test": "dotenv -e .env.test -- prisma migrate dev --schema=backend/prisma/schema.prisma --name update-quantity",
     "initialize": "node initialize.js",
     "studio:dev": "dotenv -e backend/.env -- prisma studio --schema=backend/prisma/schema.prisma",
     "studio:test": "dotenv -e backend/.env.test -- prisma studio --schema=backend/prisma/schema.prisma",

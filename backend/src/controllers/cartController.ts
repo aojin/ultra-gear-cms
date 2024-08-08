@@ -2,17 +2,14 @@ import { Request, Response } from "express";
 import {
   createCart,
   getAllCarts,
-  updateCart,
   deleteCart,
-  CreateCartItemInput,
+  addCartItemToCart,
+  removeCartItemFromCart,
+  clearCart,
+  getCartByUserId,
 } from "../services/cartService";
-import { getCartItemsByUserId, clearCart } from "../services/cartService";
-import {
-  createOrder,
-  decrementInventory,
-  updateOrder,
-} from "../services/orderService";
-import { createOrderItems } from "../services/orderItemService";
+import { CreateCartItemInput } from "../types";
+import { createOrder } from "../services/orderService";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -51,31 +48,6 @@ export const getAllCartsHandler = async (
   }
 };
 
-export const updateCartHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { id } = req.params;
-  const { items } = req.body;
-  if (!id || !items) {
-    res
-      .status(400)
-      .json({ error: "Controller: Cart ID and items are required" });
-    return;
-  }
-
-  try {
-    const cart = await updateCart(
-      parseInt(id, 10),
-      items as CreateCartItemInput[]
-    );
-    res.status(200).json(cart);
-  } catch (error) {
-    console.error("Controller: Error updating cart:", error);
-    res.status(500).json({ error: "Controller Error: Failed to update cart" });
-  }
-};
-
 export const deleteCartHandler = async (
   req: Request,
   res: Response
@@ -95,67 +67,66 @@ export const deleteCartHandler = async (
   }
 };
 
-export const buyCartItemsHandler = async (
+export const addCartItemToCartHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { cartId, item } = req.body;
+
+  if (!cartId || !item) {
+    res.status(400).json({ error: "Cart ID and item are required" });
+    return;
+  }
+
+  try {
+    const updatedCart = await addCartItemToCart(cartId, item);
+    res.status(200).json(updatedCart);
+  } catch (error) {
+    console.error("Controller: Error adding item to cart:", error);
+    res
+      .status(500)
+      .json({ error: "Controller Error: Failed to add item to cart" });
+  }
+};
+
+export const removeCartItemFromCartHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { cartId, itemId } = req.body;
+
+  if (!cartId || !itemId) {
+    res.status(400).json({ error: "Cart ID and item ID are required" });
+    return;
+  }
+
+  try {
+    const updatedCart = await removeCartItemFromCart(cartId, itemId);
+    res.status(200).json(updatedCart);
+  } catch (error) {
+    console.error("Controller: Error removing item from cart:", error);
+    res
+      .status(500)
+      .json({ error: "Controller Error: Failed to remove item from cart" });
+  }
+};
+
+export const clearCartHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { userId } = req.body;
 
+  if (!userId) {
+    res.status(400).json({ error: "User ID is required" });
+    return;
+  }
+
   try {
-    // Fetch cart items for the user
-    const cartItems = await getCartItemsByUserId(userId);
-
-    if (!cartItems || cartItems.length === 0) {
-      res.status(400).json({ error: "No items in cart" });
-      return;
-    }
-
-    // Fetch product names and calculate total amount
-    const orderItems = await Promise.all(
-      cartItems.map(async (item) => {
-        const product = await prisma.product.findUnique({
-          where: { id: item.productId },
-        });
-
-        if (!product) {
-          throw new Error(`Product with id ${item.productId} not found`);
-        }
-
-        return {
-          productId: item.productId,
-          productVariantId: item.variantId,
-          quantity: item.cartQuantity,
-          price: item.currentPrice,
-          productName: product.name,
-        };
-      })
-    );
-
-    // Calculate total amount
-    const totalAmount = orderItems.reduce(
-      (total, item) => total + item.quantity * item.price,
-      0
-    );
-
-    // Create an order
-    // const order = await createOrder(userId, totalAmount, orderItems);
-
-    // Decrement inventory for each item in the order
-    for (const item of cartItems) {
-      await decrementInventory(
-        item.productId,
-        item.cartQuantity,
-        item.variantId ?? null,
-        item.sizeId ?? null
-      );
-    }
-
-    // Clear the cart for the user
     await clearCart(userId);
-
-    res.status(200).json("commenting out order");
+    res.status(200).json({ message: "Cart cleared successfully" });
   } catch (error) {
-    console.error("Error in buyCartItemsHandler:", error);
-    res.status(500).json({ error: "Failed to process the order" });
+    console.error("Controller: Error clearing cart:", error);
+    res.status(500).json({ error: "Controller Error: Failed to clear cart" });
   }
 };

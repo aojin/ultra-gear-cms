@@ -1,5 +1,6 @@
 import { PrismaClient, Product, Prisma } from "@prisma/client";
 import { CreateProductInput, UpdateProductInput } from "../types";
+import { createProductVariant } from "./productVariantService";
 
 const prisma = new PrismaClient();
 
@@ -11,20 +12,37 @@ const prisma = new PrismaClient();
 export const createProduct = async (
   data: CreateProductInput
 ): Promise<Product> => {
-  try {
-    return await prisma.product.create({
-      data,
-    });
-  } catch (error: any) {
-    console.error("Service: Error creating product:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
+  const { isSingleSize, quantity, ...productData } = data;
+
+  const product = await prisma.product.create({
+    data: {
+      ...productData,
+      quantity: isSingleSize ? quantity || 0 : 0,
+    },
+  });
+
+  return product;
+};
+
+export const getProductTotalQuantity = async (productId: number) => {
+  const variants = await prisma.productVariant.findMany({
+    where: { productId },
+    include: { sizes: true },
+  });
+
+  return variants.reduce((total, variant) => {
+    if (variant.isSingleSize) {
+      return total + (variant.quantity || 0);
     } else {
-      throw new Error("Service Error: Failed to create product");
+      return (
+        total +
+        variant.sizes.reduce(
+          (variantTotal, size) => variantTotal + (size.quantity || 0),
+          0
+        )
+      );
     }
-  }
+  }, 0);
 };
 
 /**

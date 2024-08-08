@@ -1,86 +1,55 @@
-import { PrismaClient, Cart, Prisma, CartItem } from "@prisma/client";
-import { CreateCartItemInput } from "./cartItemService";
+import { PrismaClient, Cart, CartItem, Product } from "@prisma/client";
+import { CreateCartItemInput } from "../types";
 
 const prisma = new PrismaClient();
+
+export type CartWithItems = Cart & {
+  items: (CartItem & {
+    product: Product;
+  })[];
+};
 
 export const createCart = async (
   userId: number,
   items: CreateCartItemInput[]
-): Promise<Cart> => {
+): Promise<CartWithItems> => {
   try {
-    // Create cart with items
     const cart = await prisma.cart.create({
       data: {
-        userId: userId,
+        userId,
         items: {
-          create: items.map((item) => ({
-            productId: item.productId,
-            variantId: item.variantId ?? null,
-            sizeId: item.sizeId ?? null,
-            cartQuantity: item.cartQuantity,
-            currentPrice: item.currentPrice,
-          })),
+          create: items,
         },
       },
       include: {
-        items: true, // Include items if you need them in the response
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
-
-    return cart;
+    return cart as CartWithItems;
   } catch (error) {
     console.error("Service: Error creating cart:", error);
-    throw new Error("Failed to create cart");
+    throw new Error("Service Error: Failed to create cart");
   }
 };
 
-export const getAllCarts = async (): Promise<Cart[]> => {
+export const getAllCarts = async (): Promise<CartWithItems[]> => {
   try {
-    return await prisma.cart.findMany({
+    return (await prisma.cart.findMany({
       include: {
-        items: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
-    });
+    })) as CartWithItems[];
   } catch (error) {
     console.error("Service: Error fetching carts:", error);
     throw new Error("Service Error: Failed to fetch carts");
-  }
-};
-
-export const updateCart = async (
-  id: number,
-  items: CreateCartItemInput[]
-): Promise<Cart> => {
-  try {
-    return await prisma.cart.update({
-      where: { id },
-      data: {
-        items: {
-          deleteMany: {},
-          create: items.map((item) => ({
-            product: { connect: { id: item.productId } },
-            variant: item.variantId
-              ? { connect: { id: item.variantId } }
-              : undefined,
-            size: item.sizeId ? { connect: { id: item.sizeId } } : undefined,
-            cartQuantity: item.cartQuantity,
-            currentPrice: item.currentPrice,
-          })),
-        },
-      },
-      include: {
-        items: true,
-      },
-    });
-  } catch (error) {
-    console.error("Service: Error updating cart:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to update cart");
-    }
   }
 };
 
@@ -91,52 +60,120 @@ export const deleteCart = async (id: number): Promise<void> => {
     });
   } catch (error) {
     console.error("Service: Error deleting cart:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new Error(
-        "Service Error: Unique constraint violation or other known error"
-      );
-    } else {
-      throw new Error("Service Error: Failed to delete cart");
-    }
+    throw new Error("Service Error: Failed to delete cart");
   }
 };
 
-export const getCartItemsByUserId = async (
-  userId: number
-): Promise<CartItem[]> => {
+export const addCartItemToCart = async (
+  cartId: number,
+  item: CreateCartItemInput
+): Promise<CartWithItems> => {
   try {
-    const cart = await prisma.cartItem.findMany({
-      where: { cart: { userId } },
+    const updatedCart = await prisma.cart.update({
+      where: { id: cartId },
+      data: {
+        items: {
+          create: item,
+        },
+      },
       include: {
-        product: true,
-        variant: true,
-        size: true, // Include size if applicable
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
 
-    if (!cart) {
-      throw new Error("Cart not found");
+    return updatedCart as CartWithItems;
+  } catch (error) {
+    console.error("Service: Error adding item to cart:", error);
+    throw new Error("Service Error: Failed to add item to cart");
+  }
+};
+
+export const removeCartItemFromCart = async (
+  cartId: number,
+  itemId: number
+): Promise<CartWithItems> => {
+  try {
+    await prisma.cartItem.delete({
+      where: { id: itemId },
+    });
+
+    const updatedCart = await prisma.cart.findUnique({
+      where: { id: cartId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    if (!updatedCart) {
+      throw new Error(`Cart with id ${cartId} not found`);
     }
 
-    return cart;
+    return updatedCart as CartWithItems;
+  } catch (error) {
+    console.error("Service: Error removing item from cart:", error);
+    throw new Error("Service Error: Failed to remove item from cart");
+  }
+};
+
+export const clearCart = async (userId: number): Promise<void> => {
+  try {
+    const cart = await prisma.cart.findFirst({
+      where: { userId },
+      include: { items: true },
+    });
+
+    if (cart) {
+      await prisma.cartItem.deleteMany({
+        where: { cartId: cart.id },
+      });
+    }
+  } catch (error) {
+    console.error("Service: Error clearing cart:", error);
+    throw new Error("Service Error: Failed to clear cart");
+  }
+};
+
+export const getCartByUserId = async (
+  userId: number
+): Promise<CartWithItems | null> => {
+  try {
+    const cart = await prisma.cart.findFirst({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+    return cart as CartWithItems | null;
   } catch (error) {
     console.error("Service: Error fetching cart items by user ID:", error);
     throw new Error("Service Error: Failed to fetch cart items by user ID");
   }
 };
 
-export const clearCart = async (userId: number): Promise<void> => {
+export const getCartItemsByCartId = async (
+  cartId: number
+): Promise<CartItem[]> => {
   try {
-    await prisma.cartItem.deleteMany({
-      where: {
-        cart: {
-          userId,
-        },
+    return await prisma.cartItem.findMany({
+      where: { cartId },
+      include: {
+        product: true,
       },
     });
   } catch (error) {
-    console.error("Service: Error clearing cart:", error);
-    throw new Error("Service Error: Failed to clear cart");
+    console.error("Service: Error fetching cart items by cart ID:", error);
+    throw new Error("Service Error: Failed to fetch cart items by cart ID");
   }
 };
-export { CreateCartItemInput };

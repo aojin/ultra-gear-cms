@@ -1,3 +1,4 @@
+import { Request, Response } from "express";
 import {
   createOrder,
   getAllOrders,
@@ -8,23 +9,19 @@ import {
   permanentlyDeleteOrder,
   findUserById,
 } from "../services/orderService";
-import { Request, Response } from "express";
-import {
-  CreateOrderInput,
-  UpdateOrderInput,
-  UpdateOrderItemInput,
-} from "../types"; // Adjust the import path as necessary
+import { UpdateOrderInput } from "../types";
+import { getCartItemsByCartId, clearCart } from "../services/cartService";
+import { createOrderItems } from "../services/orderItemService";
 
 export const createOrderHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { userId, totalAmount, orderItems } = req.body;
+  const { userId, orderItems } = req.body;
 
   try {
     if (
       !userId ||
-      !totalAmount ||
       !orderItems ||
       !Array.isArray(orderItems) ||
       orderItems.length === 0
@@ -47,7 +44,7 @@ export const createOrderHandler = async (
       }
     }
 
-    const newOrder = await createOrder(userId, totalAmount, orderItems);
+    const newOrder = await createOrder(userId, orderItems);
 
     res.status(201).json(newOrder);
   } catch (error) {
@@ -157,5 +154,30 @@ export const unarchiveOrderHandler = async (
   } catch (error) {
     console.error("Controller: Error unarchiving order:", error);
     res.status(500).json({ error: (error as Error).message });
+  }
+};
+
+export const createOrderFromCartHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { orderId, cartId } = req.body;
+
+  try {
+    const cartItems = await getCartItemsByCartId(cartId);
+
+    if (!cartItems.length) {
+      res.status(404).json({ error: "Cart is empty" });
+      return;
+    }
+
+    const orderItems = await createOrderItems(orderId, cartItems);
+
+    await clearCart(cartId);
+
+    res.status(201).json(orderItems);
+  } catch (error) {
+    console.error("Error in createOrderFromCartHandler:", error);
+    res.status(500).json({ error: "Failed to create order from cart" });
   }
 };

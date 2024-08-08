@@ -9,9 +9,8 @@ import {
   archiveSize,
   unarchiveSize,
   deleteSize,
-  CreateSizeInput,
-  UpdateSizeInput,
 } from "../services/sizeService";
+import { CreateSizeInput, UpdateSizeInput } from "../types";
 
 export const createSizeHandler = async (
   req: Request,
@@ -162,8 +161,8 @@ export const unarchiveSizeHandler = async (
   } catch (error) {
     console.error("Controller Error: Unarchiving size:", error);
     res
-      .status(400)
-      .json({ error: "An error occurred while unarchiving the size" });
+      .status(500)
+      .json({ error: "An error occurred while unarchiving the size." });
   }
 };
 
@@ -179,7 +178,7 @@ export const deleteSizeHandler = async (
   } catch (error) {
     console.error("Controller Error: Deleting size:", error);
     res
-      .status(400)
-      .json({ error: "An error occurred while deleting the size" });
+      .status(500)
+      .json({ error: "An error occurred while deleting the size." });
   }
 };
