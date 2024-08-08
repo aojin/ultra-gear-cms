@@ -197,7 +197,6 @@ model Inventory {
 
 model Sale {
   id             Int              @id @default(autoincrement())
-  name           String
   title          String
   tagline        String
   startDate      DateTime

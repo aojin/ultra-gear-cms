@@ -7,9 +7,8 @@ import {
   deleteSale,
   archiveSale,
   unarchiveSale,
-  CreateSaleInput,
-  UpdateSaleInput,
 } from "../services/saleService";
+import { CreateSaleInput, UpdateSaleInput } from "../types";
 
 export const createSaleHandler = async (
   req: Request,
@@ -78,11 +77,11 @@ export const getSaleByIdHandler = async (
     } else {
       res.status(404).json({ error: "Sale not found" });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Fetching sale by ID:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching the sale by ID." });
+    res.status(error.message === "NotFound" ? 404 : 500).json({
+      error: "An error occurred while fetching the sale by ID.",
+    });
   }
 };
 
@@ -119,11 +118,11 @@ export const updateSaleHandler = async (
       promoCodes,
     });
     res.status(200).json(sale);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Updating sale:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while updating the sale." });
+    res.status(error.message === "NotFound" ? 404 : 500).json({
+      error: "An error occurred while updating the sale.",
+    });
   }
 };
 
@@ -134,11 +133,11 @@ export const deleteSaleHandler = async (
   try {
     await deleteSale(parseInt(req.params.id, 10));
     res.status(204).end();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Deleting sale:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while deleting the sale." });
+    res.status(error.message === "NotFound" ? 404 : 500).json({
+      error: "An error occurred while deleting the sale.",
+    });
   }
 };
 
@@ -149,11 +148,11 @@ export const archiveSaleHandler = async (
   try {
     const sale = await archiveSale(parseInt(req.params.id, 10));
     res.status(200).json(sale);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Archiving sale:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while archiving the sale." });
+    res.status(error.message === "NotFound" ? 404 : 500).json({
+      error: "An error occurred while archiving the sale.",
+    });
   }
 };
 
@@ -164,10 +163,10 @@ export const unarchiveSaleHandler = async (
   try {
     const sale = await unarchiveSale(parseInt(req.params.id, 10));
     res.status(200).json(sale);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Unarchiving sale:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while unarchiving the sale." });
+    res.status(error.message === "NotFound" ? 404 : 500).json({
+      error: "An error occurred while unarchiving the sale.",
+    });
   }
 };

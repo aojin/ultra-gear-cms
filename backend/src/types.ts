@@ -19,11 +19,24 @@ export type CreateProductInput = BaseProductInput & {
 export type UpdateProductInput = Partial<CreateProductInput>;
 
 // Create and Update Product Variant types
-export type CreateProductVariantInput = BaseProductInput & {
+export interface CreateProductVariantInput {
+  name: string;
+  msrpPrice: number;
+  currentPrice: number;
   productId: number;
-};
+  isSingleSize: boolean;
+  quantity?: number | null;
+  archived?: boolean;
+}
 
-export type UpdateProductVariantInput = Partial<CreateProductVariantInput>;
+export interface UpdateProductVariantInput {
+  name?: string;
+  msrpPrice?: number;
+  currentPrice?: number;
+  isSingleSize?: boolean;
+  quantity?: number | null;
+  archived?: boolean;
+}
 
 // Cart and CartItem types
 export type CartWithItems = Cart & {
@@ -96,10 +109,10 @@ export type UpdateUserInput = Partial<CreateUserInput>;
 export type CreateReviewInput = {
   userName: string;
   userEmail: string;
+  userId: number;
   productId: number;
   rating: number;
-  comment?: string | null;
-  userId?: number | null;
+  comment?: string;
 };
 
 export type UpdateReviewInput = Partial<CreateReviewInput>;
@@ -159,10 +172,14 @@ export type CreateSaleInput = {
   name: string;
   title: string;
   tagline: string;
-  startDate: Date;
-  endDate: Date;
-  salePercentage?: number | null;
-  saleAmount?: number | null;
+  startDate: string | Date;
+  endDate: string | Date;
+  salePercentage?: number;
+  saleAmount?: number;
+  archived?: boolean;
+  products: number[];
+  variants: number[];
+  promoCodes: number[];
 };
 
 export type UpdateSaleInput = Partial<CreateSaleInput>;
@@ -177,11 +194,11 @@ export type CreatePromoCodeInput = {
 
 export type UpdatePromoCodeInput = Partial<CreatePromoCodeInput>;
 
-// Create and Update Package types
 export type CreatePackageInput = {
   name: string;
-  description?: string | null;
+  description?: string;
   price: number;
+  products: number[];
 };
 
 export type UpdatePackageInput = Partial<CreatePackageInput>;

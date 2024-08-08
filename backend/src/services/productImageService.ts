@@ -39,10 +39,20 @@ export const getProductImageById = async (
   id: number
 ): Promise<ProductImage | null> => {
   try {
-    return await prisma.productImage.findUnique({ where: { id } });
-  } catch (error) {
+    const productImage = await prisma.productImage.findUnique({
+      where: { id },
+    });
+    if (!productImage) {
+      throw new Error("NotFound");
+    }
+    return productImage;
+  } catch (error: any) {
     console.error("Service: Error fetching product image by ID:", error);
-    throw new Error("Service Error: Failed to fetch product image by ID");
+    throw new Error(
+      error.message === "NotFound"
+        ? "NotFound"
+        : "Service Error: Failed to fetch product image by ID"
+    );
   }
 };
 
@@ -85,13 +95,20 @@ export const updateProductImage = async (
   data: UpdateProductImageInput
 ): Promise<ProductImage> => {
   try {
-    return await prisma.productImage.update({
+    const productImage = await prisma.productImage.update({
       where: { id },
       data,
     });
+    if (!productImage) {
+      throw new Error("NotFound");
+    }
+    return productImage;
   } catch (error) {
     console.error("Service: Error updating product image:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error(
         "Service Error: Unique constraint violation or other known error"
       );
@@ -105,13 +122,20 @@ export const archiveProductImage = async (
   id: number
 ): Promise<ProductImage> => {
   try {
-    return await prisma.productImage.update({
+    const productImage = await prisma.productImage.update({
       where: { id },
       data: { archived: true },
     });
+    if (!productImage) {
+      throw new Error("NotFound");
+    }
+    return productImage;
   } catch (error) {
     console.error("Service: Error archiving product image:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error(
         "Service Error: Unique constraint violation or other known error"
       );
@@ -125,13 +149,20 @@ export const unarchiveProductImage = async (
   id: number
 ): Promise<ProductImage> => {
   try {
-    return await prisma.productImage.update({
+    const productImage = await prisma.productImage.update({
       where: { id },
       data: { archived: false },
     });
+    if (!productImage) {
+      throw new Error("NotFound");
+    }
+    return productImage;
   } catch (error) {
     console.error("Service: Error unarchiving product image:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error(
         "Service Error: Unique constraint violation or other known error"
       );
@@ -147,6 +178,9 @@ export const deleteProductImage = async (id: number): Promise<void> => {
   } catch (error) {
     console.error("Service: Error deleting product image:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error(
         "Service Error: Unique constraint violation or other known error"
       );

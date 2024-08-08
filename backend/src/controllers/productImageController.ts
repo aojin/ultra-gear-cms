@@ -65,7 +65,11 @@ export const getProductImageHandler = async (
     res.status(200).json(productImage);
   } catch (error) {
     console.error("Controller: Error fetching product image by ID:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Product image not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };
 
@@ -127,7 +131,11 @@ export const updateProductImageHandler = async (
     res.status(200).json(productImage);
   } catch (error) {
     console.error("Controller: Error updating product image:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Product image not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };
 
@@ -140,7 +148,11 @@ export const archiveProductImageHandler = async (
     res.status(200).json(productImage);
   } catch (error) {
     console.error("Controller: Error archiving product image:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Product image not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };
 
@@ -154,7 +166,12 @@ export const unarchiveProductImageHandler = async (
     );
     res.status(200).json(productImage);
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    console.error("Controller: Error unarchiving product image:", error);
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Product image not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };
 
@@ -166,6 +183,11 @@ export const deleteProductImageHandler = async (
     await deleteProductImage(parseInt(req.params.id, 10));
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+    console.error("Controller: Error deleting product image:", error);
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Product image not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };

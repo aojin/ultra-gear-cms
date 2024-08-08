@@ -2,6 +2,7 @@ import express, { RequestHandler } from "express";
 import {
   createReviewHandler,
   getAllReviewsHandler,
+  getReviewByIdHandler, // Add this import
   getReviewsByUserIdHandler,
   getReviewsByProductIdHandler,
   updateReviewHandler,
@@ -15,6 +16,7 @@ const router = express.Router();
 
 router.post("/", createReviewHandler as RequestHandler);
 router.get("/", getAllReviewsHandler as RequestHandler);
+router.get("/:id", getReviewByIdHandler as RequestHandler); // Add this route
 router.get("/user/:userId", getReviewsByUserIdHandler as RequestHandler);
 router.get(
   "/product/:productId",

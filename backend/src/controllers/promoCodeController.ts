@@ -5,9 +5,8 @@ import {
   getAllPromoCodes,
   updatePromoCode,
   deletePromoCode,
-  CreatePromoCodeInput,
-  UpdatePromoCodeInput,
 } from "../services/promoCodeService";
+import { CreatePromoCodeInput, UpdatePromoCodeInput } from "../types";
 
 export const createPromoCodeHandler = async (
   req: Request,
@@ -44,7 +43,11 @@ export const getPromoCodeByIdHandler = async (
     res.status(200).json(promoCode);
   } catch (error) {
     console.error("Controller Error: Retrieving promo code by ID:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Promo code not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };
 
@@ -76,7 +79,11 @@ export const updatePromoCodeHandler = async (
     res.status(200).json(promoCode);
   } catch (error) {
     console.error("Controller Error: Updating promo code:", error);
-    res.status(400).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Promo code not found" });
+    } else {
+      res.status(400).json({ error: (error as Error).message });
+    }
   }
 };
 
@@ -87,9 +94,13 @@ export const deletePromoCodeHandler = async (
   const { id } = req.params;
   try {
     await deletePromoCode(parseInt(id, 10));
-    res.status(204).json({ message: "Promo code deleted successfully" });
+    res.status(204).send();
   } catch (error) {
     console.error("Controller Error: Deleting promo code:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Promo code not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };

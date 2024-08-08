@@ -1,19 +1,6 @@
 import { PrismaClient, PromoCode, Prisma } from "@prisma/client";
-
+import { CreatePromoCodeInput, UpdatePromoCodeInput } from "../types";
 const prisma = new PrismaClient();
-
-export type CreatePromoCodeInput = {
-  code: string;
-  validFrom: Date;
-  validTo: Date;
-  saleId: number;
-};
-
-export type UpdatePromoCodeInput = {
-  code?: string;
-  validFrom?: Date;
-  validTo?: Date;
-};
 
 export const createPromoCode = async (
   data: CreatePromoCodeInput
@@ -45,12 +32,20 @@ export const getPromoCodeById = async (
   id: number
 ): Promise<PromoCode | null> => {
   try {
-    return await prisma.promoCode.findUnique({
+    const promoCode = await prisma.promoCode.findUnique({
       where: { id },
     });
-  } catch (error) {
+    if (!promoCode) {
+      throw new Error("NotFound");
+    }
+    return promoCode;
+  } catch (error: any) {
     console.error("Service Error: Retrieving promo code by ID:", error);
-    throw new Error("Service Error: Failed to retrieve promo code by ID");
+    throw new Error(
+      error.message === "NotFound"
+        ? "NotFound"
+        : "Service Error: Failed to retrieve promo code by ID"
+    );
   }
 };
 
@@ -68,13 +63,20 @@ export const updatePromoCode = async (
   data: UpdatePromoCodeInput
 ): Promise<PromoCode> => {
   try {
-    return await prisma.promoCode.update({
+    const promoCode = await prisma.promoCode.update({
       where: { id },
       data,
     });
+    if (!promoCode) {
+      throw new Error("NotFound");
+    }
+    return promoCode;
   } catch (error) {
     console.error("Service Error: Updating promo code:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error(
         "Service Error: Unique constraint violation or other known error"
       );
@@ -92,6 +94,9 @@ export const deletePromoCode = async (id: number): Promise<void> => {
   } catch (error) {
     console.error("Service Error: Deleting promo code:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error(
         "Service Error: Unique constraint violation or other known error"
       );

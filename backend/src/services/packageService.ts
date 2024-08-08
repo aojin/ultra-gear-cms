@@ -1,15 +1,7 @@
 import { PrismaClient, Package, Prisma } from "@prisma/client";
+import { CreatePackageInput, UpdatePackageInput } from "../types";
 
 const prisma = new PrismaClient();
-
-export type CreatePackageInput = {
-  name: string;
-  description?: string;
-  price: number;
-  products: number[];
-};
-
-export type UpdatePackageInput = Partial<CreatePackageInput>;
 
 export const createPackage = async (
   data: CreatePackageInput
@@ -76,6 +68,9 @@ export const updatePackage = async (
   } catch (error) {
     console.error("Service: Error updating package:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error(
         "Service Error: Unique constraint violation or other known error"
       );
@@ -91,6 +86,9 @@ export const deletePackage = async (id: number): Promise<void> => {
   } catch (error) {
     console.error("Service: Error deleting package:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error(
         "Service Error: Unique constraint violation or other known error"
       );

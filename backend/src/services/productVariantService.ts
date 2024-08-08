@@ -79,9 +79,13 @@ export const updateProductVariant = async (
   data: UpdateProductVariantInput
 ): Promise<ProductVariant> => {
   try {
+    const { quantity = 0, ...variantData } = data;
     const variant = await prisma.productVariant.update({
       where: { id },
-      data,
+      data: {
+        ...variantData,
+        quantity: data.isSingleSize ? quantity ?? 0 : 0,
+      },
     });
 
     // Update the product total quantity after the variant is updated
@@ -112,8 +116,11 @@ export const deleteProductVariant = async (
     await updateProductTotalQuantity(variant.productId);
 
     return variant;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service: Error deleting product variant:", error);
+    if (error.code === "P2025") {
+      throw new Error("NotFound");
+    }
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new Error(
         "Service Error: Unique constraint violation or other known error"

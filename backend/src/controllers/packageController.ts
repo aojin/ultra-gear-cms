@@ -5,9 +5,8 @@ import {
   getPackageById,
   updatePackage,
   deletePackage,
-  CreatePackageInput,
-  UpdatePackageInput,
 } from "../services/packageService";
+import { CreatePackageInput, UpdatePackageInput } from "../types";
 
 export const createPackageHandler = async (
   req: Request,
@@ -86,7 +85,11 @@ export const updatePackageHandler = async (
     res.status(200).json(updatedPackage);
   } catch (error) {
     console.error("Controller: Error updating package:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Package not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };
 
@@ -100,6 +103,10 @@ export const deletePackageHandler = async (
     res.status(204).send();
   } catch (error) {
     console.error("Controller: Error deleting package:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Package not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };

@@ -9,8 +9,6 @@ import {
   deleteReview,
   getReviewsByUserId,
   getReviewsByProductId,
-  CreateReviewInput,
-  UpdateReviewInput,
 } from "../services/reviewService";
 
 export const createReviewHandler = async (
@@ -33,6 +31,29 @@ export const createReviewHandler = async (
     console.error("Controller Error: Creating review:", error);
     res.status(500).json({
       error: "An error occurred while creating the review.",
+    });
+  }
+};
+
+export const getReviewByIdHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
+  try {
+    const review = await getReviewById(parseInt(id, 10));
+    if (!review) {
+      res.status(404).json({ error: "Review not found" });
+      return;
+    }
+    res.status(200).json(review);
+  } catch (error: any) {
+    console.error("Controller Error: Fetching review by ID:", error);
+    res.status(error.message === "NotFound" ? 404 : 500).json({
+      error:
+        error.message === "NotFound"
+          ? "Review not found"
+          : "An error occurred while fetching the review.",
     });
   }
 };
@@ -79,12 +100,11 @@ export const updateReviewHandler = async (
       productId,
       rating,
       comment,
-      archived,
     });
     res.json(updatedReview);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Updating review:", error);
-    res.status(500).json({
+    res.status(error.message === "NotFound" ? 404 : 500).json({
       error: "An error occurred while updating the review.",
     });
   }
@@ -110,9 +130,9 @@ export const archiveReviewByUserHandler = async (
     }
     const archivedReview = await archiveReview(parseInt(id, 10));
     res.status(200).json(archivedReview);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Archiving review:", error);
-    res.status(500).json({
+    res.status(error.message === "NotFound" ? 404 : 500).json({
       error: "An error occurred while archiving the review.",
     });
   }
@@ -133,9 +153,9 @@ export const archiveReviewByAdminHandler = async (
     }
     const review = await archiveReview(parseInt(id, 10));
     res.status(200).json(review);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Archiving review:", error);
-    res.status(500).json({
+    res.status(error.message === "NotFound" ? 404 : 500).json({
       error: "An error occurred while archiving the review.",
     });
   }
@@ -156,9 +176,9 @@ export const unarchiveReviewByAdminHandler = async (
     }
     const review = await unarchiveReview(parseInt(id, 10));
     res.status(200).json(review);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Unarchiving review:", error);
-    res.status(500).json({
+    res.status(error.message === "NotFound" ? 404 : 500).json({
       error: "An error occurred while unarchiving the review.",
     });
   }
@@ -179,9 +199,9 @@ export const permanentlyDeleteReviewHandler = async (
     }
     await deleteReview(parseInt(id, 10));
     res.status(204).send();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Controller Error: Deleting review:", error);
-    res.status(500).json({
+    res.status(error.message === "NotFound" ? 404 : 500).json({
       error: "An error occurred while deleting the review.",
     });
   }

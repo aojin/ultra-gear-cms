@@ -1,28 +1,12 @@
 import { PrismaClient, Sale, Prisma } from "@prisma/client";
+import { CreateSaleInput, UpdateSaleInput } from "../types";
 
 const prisma = new PrismaClient();
-
-export type CreateSaleInput = {
-  name: string;
-  title: string;
-  tagline: string;
-  startDate: string | Date;
-  endDate: string | Date;
-  salePercentage?: number;
-  saleAmount?: number;
-  archived?: boolean;
-  products: number[];
-  variants: number[];
-  promoCodes: number[];
-};
-
-export type UpdateSaleInput = Partial<CreateSaleInput>;
 
 export const createSale = async (data: CreateSaleInput): Promise<Sale> => {
   try {
     return await prisma.sale.create({
       data: {
-        name: data.name,
         title: data.title,
         tagline: data.tagline,
         startDate: new Date(data.startDate),
@@ -68,7 +52,7 @@ export const getAllSales = async (): Promise<Sale[]> => {
 
 export const getSaleById = async (id: number): Promise<Sale | null> => {
   try {
-    return await prisma.sale.findUnique({
+    const sale = await prisma.sale.findUnique({
       where: { id },
       include: {
         products: true,
@@ -76,9 +60,17 @@ export const getSaleById = async (id: number): Promise<Sale | null> => {
         promoCodes: true,
       },
     });
-  } catch (error) {
+    if (!sale) {
+      throw new Error("NotFound");
+    }
+    return sale;
+  } catch (error: any) {
     console.error("Service Error: Fetching sale by ID:", error);
-    throw new Error("Service Error: Failed to fetch sale by ID");
+    throw new Error(
+      error.message === "NotFound"
+        ? "NotFound"
+        : "Service Error: Failed to fetch sale by ID"
+    );
   }
 };
 
@@ -87,10 +79,9 @@ export const updateSale = async (
   data: UpdateSaleInput
 ): Promise<Sale> => {
   try {
-    return await prisma.sale.update({
+    const sale = await prisma.sale.update({
       where: { id },
       data: {
-        name: data.name,
         title: data.title,
         tagline: data.tagline,
         startDate: data.startDate ? new Date(data.startDate) : undefined,
@@ -115,9 +106,16 @@ export const updateSale = async (
           : undefined,
       },
     });
-  } catch (error) {
+    if (!sale) {
+      throw new Error("NotFound");
+    }
+    return sale;
+  } catch (error: any) {
     console.error("Service Error: Updating sale:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error("Service Error: Known request error occurred");
     } else {
       throw new Error("Service Error: Failed to update sale");
@@ -130,9 +128,12 @@ export const deleteSale = async (id: number): Promise<void> => {
     await prisma.sale.delete({
       where: { id },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Service Error: Deleting sale:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error("Service Error: Known request error occurred");
     } else {
       throw new Error("Service Error: Failed to delete sale");
@@ -142,13 +143,20 @@ export const deleteSale = async (id: number): Promise<void> => {
 
 export const archiveSale = async (id: number): Promise<Sale> => {
   try {
-    return await prisma.sale.update({
+    const sale = await prisma.sale.update({
       where: { id },
       data: { archived: true },
     });
-  } catch (error) {
+    if (!sale) {
+      throw new Error("NotFound");
+    }
+    return sale;
+  } catch (error: any) {
     console.error("Service Error: Archiving sale:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error("Service Error: Known request error occurred");
     } else {
       throw new Error("Service Error: Failed to archive sale");
@@ -158,13 +166,20 @@ export const archiveSale = async (id: number): Promise<Sale> => {
 
 export const unarchiveSale = async (id: number): Promise<Sale> => {
   try {
-    return await prisma.sale.update({
+    const sale = await prisma.sale.update({
       where: { id },
       data: { archived: false },
     });
-  } catch (error) {
+    if (!sale) {
+      throw new Error("NotFound");
+    }
+    return sale;
+  } catch (error: any) {
     console.error("Service Error: Unarchiving sale:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("NotFound");
+      }
       throw new Error("Service Error: Known request error occurred");
     } else {
       throw new Error("Service Error: Failed to unarchive sale");

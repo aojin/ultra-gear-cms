@@ -1,3 +1,4 @@
+import { Request, Response } from "express";
 import {
   createProductVariant,
   getAllProductVariants,
@@ -7,7 +8,6 @@ import {
   archiveProductVariant,
   unarchiveProductVariant,
 } from "../services/productVariantService";
-import { Request, Response } from "express";
 
 interface CreateProductVariantInput {
   name: string;
@@ -50,6 +50,7 @@ export const createProductVariantHandler = async (
       currentPrice,
       productId,
       isSingleSize,
+      quantity,
     });
     res.status(201).json(productVariant);
   } catch (error) {
@@ -124,7 +125,11 @@ export const updateProductVariantHandler = async (
     res.status(200).json(productVariant);
   } catch (error) {
     console.error("Controller Error: updating product variant:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Product variant not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };
 
@@ -137,7 +142,11 @@ export const deleteProductVariantHandler = async (
     res.status(204).send();
   } catch (error) {
     console.error("Controller Error: deleting product variant:", error);
-    res.status(500).json({ error: (error as Error).message });
+    if ((error as Error).message === "NotFound") {
+      res.status(404).json({ error: "Product variant not found" });
+    } else {
+      res.status(500).json({ error: (error as Error).message });
+    }
   }
 };
 
