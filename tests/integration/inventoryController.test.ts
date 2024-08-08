@@ -811,9 +811,6 @@ describe("Inventory Controller", () => {
       where: { id: product.id },
     });
 
-    console.log("Updated size1 quantity", updatedSize1?.quantity);
-    console.log("Updated product quantity", updatedProduct?.quantity);
-
     expect(updatedSize1?.quantity).toBe(20); // 30 - 10
     expect(updatedProduct?.quantity).toBe(40); // 20 + 20
   });
@@ -849,8 +846,6 @@ describe("Inventory Controller", () => {
     const updatedProduct = await prisma.product.findUnique({
       where: { id: product.id },
     });
-
-    console.log("Updated product quantity", updatedProduct?.quantity);
 
     expect(updatedProduct?.quantity).toBe(40); // 50 - 10
   });

@@ -12,8 +12,8 @@
     "initialize": "node initialize.js",
     "studio:dev": "dotenv -e backend/.env -- prisma studio --schema=backend/prisma/schema.prisma",
     "studio:test": "dotenv -e backend/.env.test -- prisma studio --schema=backend/prisma/schema.prisma",
-    "test:unit": "jest --config jest.unit.config.cjs",
-    "test:integration": "jest --config jest.integration.config.cjs"
+    "test:unit": "jest --config jest.unit.config.cjs --runInBand",
+    "test:integration": "jest --config jest.integration.config.cjs --runInBand"
   },
   "prisma": {
     "schema": "./backend/prisma/schema.prisma"
