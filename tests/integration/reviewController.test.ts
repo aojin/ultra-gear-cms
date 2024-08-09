@@ -55,6 +55,10 @@ describe("Reviews Controller", () => {
     reviewId = review.id;
   });
 
+  afterEach(async () => {
+    await prisma.$executeRaw`ROLLBACK`;
+  });
+
   afterAll(async () => {
     // Clean up test database
     await prisma.review.deleteMany({});

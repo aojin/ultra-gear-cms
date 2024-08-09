@@ -36,6 +36,10 @@ describe("ProductVariant Controller", () => {
     variantId = variant.id;
   });
 
+  afterEach(async () => {
+    await prisma.$executeRaw`ROLLBACK`;
+  });
+
   afterAll(async () => {
     await prisma.productVariant.deleteMany({});
     await prisma.product.deleteMany({});

@@ -22,7 +22,11 @@ export const createCategoryHandler = async (
     const category = await createCategory({ name, description });
     res.status(201).json(category);
   } catch (error: any) {
-    if (error.message.includes("Uncategorized")) {
+    if (
+      error.message.includes(
+        "Cannot create a category with the name 'Uncategorized'"
+      )
+    ) {
       res.status(400).json({ error: error.message });
     } else if (error.message.includes("already exists")) {
       res.status(409).json({ error: error.message });
@@ -82,7 +86,7 @@ export const updateCategoryHandler = async (
     });
     res.status(200).json(category);
   } catch (error: any) {
-    if (error.message.includes("Uncategorized")) {
+    if (error.message.includes("Cannot update the Uncategorized category")) {
       res.status(400).json({ error: error.message });
     } else if (error.message.includes("already exists")) {
       res.status(409).json({ error: error.message });

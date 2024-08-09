@@ -67,6 +67,10 @@ describe("Package Controller", () => {
     }
   });
 
+  afterEach(async () => {
+    await prisma.$executeRaw`ROLLBACK`;
+  });
+
   afterAll(async () => {
     // Clean up test database
     await prisma.package.deleteMany({});

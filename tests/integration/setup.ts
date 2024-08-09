@@ -1,32 +1,19 @@
 import { PrismaClient } from "@prisma/client";
-import dotenv from "dotenv";
-
-dotenv.config({ path: "./backend/.env.test" });
 
 const prisma = new PrismaClient();
 
-export default async () => {
-  await prisma.$connect();
-  const tables = [
-    "Category",
-    "Product",
-    "ProductVariant",
-    "ProductImage",
-    "Size",
-    "User",
-    "OrderItem",
-    "Order",
-    "Review",
-    "Cart",
-    "CartItem",
-    "Inventory",
-    "Sale",
-    "PromoCode",
-    "Package",
-  ];
-  for (const table of tables) {
-    await prisma.$executeRawUnsafe(
-      `TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE;`
-    );
-  }
+const globalSetup = async () => {
+  await prisma.$executeRaw`TRUNCATE TABLE "CartItem" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "Cart" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "Product" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "OrderItem" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "Order" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "Category" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "PromoCode" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "Review" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "ProductVariant" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "Sale" CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "ProductImage" CASCADE`;
 };
+
+export default globalSetup;

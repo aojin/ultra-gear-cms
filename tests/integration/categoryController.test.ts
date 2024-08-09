@@ -1,24 +1,21 @@
-import { PrismaClient } from "@prisma/client";
 import request from "supertest";
-import app from "../../backend/src/app"; // Adjust the path as necessary
+import app from "../../backend/src/app";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-
-let uncategorizedCategoryId: number;
+const uniqueSuffix = Date.now();
 
 describe("Category Controller", () => {
   let testCategoryId: number;
-  let originalConsoleError: any;
+  let uncategorizedCategoryId: number;
 
   beforeAll(async () => {
-    originalConsoleError = console.error;
-
     // Ensure the "Uncategorized" category exists
     const uncategorizedCategory = await prisma.category.upsert({
-      where: { name: "Uncategorized" },
+      where: { name: `Uncategorized_${uniqueSuffix}` },
       update: {},
       create: {
-        name: "Uncategorized",
+        name: `Uncategorized_${uniqueSuffix}`,
         description: "Default category for uncategorized products",
       },
     });
@@ -33,14 +30,14 @@ describe("Category Controller", () => {
     // Ensure a clean state
     await prisma.category.deleteMany({
       where: {
-        name: { not: "Uncategorized" },
+        name: { not: `Uncategorized_${uniqueSuffix}` },
       },
     });
 
     // Creating necessary data for the tests
     const category = await prisma.category.create({
       data: {
-        name: "Test Category",
+        name: `Test Category ${uniqueSuffix}`,
         description: "A category for testing purposes",
       },
     });
@@ -48,36 +45,42 @@ describe("Category Controller", () => {
   });
 
   it("should create a new category", async () => {
-    const response = await request(app).post("/api/categories").send({
-      name: "New Category",
-      description: "Another category for testing purposes",
-    });
+    const response = await request(app)
+      .post("/api/categories")
+      .send({
+        name: `New Category ${uniqueSuffix}`,
+        description: "Another category for testing purposes",
+      });
 
     expect(response.status).toBe(201);
-    expect(response.body.name).toBe("New Category");
+    expect(response.body.name).toBe(`New Category ${uniqueSuffix}`);
   });
 
   it("should not create a category with the name 'Uncategorized'", async () => {
-    const response = await request(app).post("/api/categories").send({
-      name: "Uncategorized",
-      description: "Trying to create a category with the reserved name",
-    });
+    const response = await request(app)
+      .post("/api/categories")
+      .send({
+        name: `Uncategorized_${uniqueSuffix}`,
+        description: "Trying to create a category with the reserved name",
+      });
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe(
-      "Cannot create a category with the name 'Uncategorized'"
+      `Cannot create a category with the name 'Uncategorized'`
     );
   });
 
   it("should not create a duplicate category", async () => {
-    const response = await request(app).post("/api/categories").send({
-      name: "Test Category",
-      description: "Trying to create a duplicate category",
-    });
+    const response = await request(app)
+      .post("/api/categories")
+      .send({
+        name: `Test Category ${uniqueSuffix}`,
+        description: "Trying to create a duplicate category",
+      });
 
     expect(response.status).toBe(409);
     expect(response.body.error).toBe(
-      "Category with the name 'Test Category' already exists"
+      `Category with the name 'Test Category ${uniqueSuffix}' already exists`
     );
   });
 
@@ -94,32 +97,32 @@ describe("Category Controller", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(response.body.name).toBe("Test Category");
+    expect(response.body.name).toBe(`Test Category ${uniqueSuffix}`);
   });
 
   it("should update a category", async () => {
     const response = await request(app)
       .put(`/api/categories/${testCategoryId}`)
       .send({
-        name: "Updated Category",
+        name: `Updated Category ${uniqueSuffix}`,
         description: "An updated category for testing purposes",
       });
 
     expect(response.status).toBe(200);
-    expect(response.body.name).toBe("Updated Category");
+    expect(response.body.name).toBe(`Updated Category ${uniqueSuffix}`);
   });
 
   it("should not update the Uncategorized category", async () => {
     const response = await request(app)
       .put(`/api/categories/${uncategorizedCategoryId}`)
       .send({
-        name: "Updated Uncategorized Category",
+        name: `Updated Uncategorized Category ${uniqueSuffix}`,
         description: "Trying to update the uncategorized category",
       });
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe(
-      "Cannot update the Uncategorized category"
+      `Cannot update the Uncategorized category`
     );
   });
 
@@ -130,7 +133,7 @@ describe("Category Controller", () => {
 
     expect(response.status).toBe(400); // or whatever status you choose to return for this error
     expect(response.body.error).toBe(
-      "Cannot delete the Uncategorized category"
+      `Cannot delete the Uncategorized category`
     );
   });
 

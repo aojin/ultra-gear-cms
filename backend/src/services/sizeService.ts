@@ -6,6 +6,26 @@ import { UpdateSizeInput } from "../types";
 const prisma = new PrismaClient();
 
 export const createSize = async (data: CreateSizeInput) => {
+  console.log({ data });
+  // Validate product and variant existence
+  if (data.variantId) {
+    const variantExists = await prisma.productVariant.findUnique({
+      where: { id: data.variantId },
+    });
+    if (!variantExists) {
+      throw new Error(`Variant with ID ${data.variantId} does not exist.`);
+    }
+  }
+
+  if (data.productId) {
+    const productExists = await prisma.product.findUnique({
+      where: { id: data.productId },
+    });
+    if (!productExists) {
+      throw new Error(`Product with ID ${data.productId} does not exist.`);
+    }
+  }
+
   const newSize = await prisma.size.create({
     data: {
       ...data,
@@ -101,6 +121,11 @@ export const updateSize = async (
   data: UpdateSizeInput
 ): Promise<Size> => {
   try {
+    const sizeExists = await prisma.size.findUnique({ where: { id } });
+    if (!sizeExists) {
+      throw new Error(`Size with ID ${id} does not exist.`);
+    }
+
     const updatedSize = await prisma.size.update({
       where: { id },
       data: {
@@ -110,7 +135,6 @@ export const updateSize = async (
     });
 
     if (updatedSize.variantId) {
-      // Update variant quantity to be the sum of all size quantities
       await updateVariantTotalQuantity(updatedSize.variantId);
     }
 

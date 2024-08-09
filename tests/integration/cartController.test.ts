@@ -5,15 +5,15 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 describe("Cart Controller", () => {
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
-
-  afterEach(async () => {
+  beforeAll(async () => {
     await prisma.cartItem.deleteMany({});
     await prisma.cart.deleteMany({});
     await prisma.product.deleteMany({});
     await prisma.user.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
   });
 
   it("should create a new cart", async () => {

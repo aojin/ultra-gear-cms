@@ -3,6 +3,7 @@ import app from "../../backend/src/app";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
+const uniqueSuffix = Date.now();
 
 describe("CartItem Controller", () => {
   let testCartId: number;
@@ -10,26 +11,18 @@ describe("CartItem Controller", () => {
   let testUserId: number;
 
   beforeAll(async () => {
-    await prisma.$executeRaw`TRUNCATE TABLE "CartItem" CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE "Cart" CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE "Product" CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE "OrderItem" CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE "Order" CASCADE`;
-
-    // Create a user for the test
     const user = await prisma.user.create({
       data: {
-        email: `testuser${Date.now()}@example.com`,
+        email: `testuser${uniqueSuffix}@example.com`,
         password: "password123",
         name: "Test User",
       },
     });
     testUserId = user.id;
 
-    // Create a product for the test
     const product = await prisma.product.create({
       data: {
-        name: "Test Product",
+        name: `Test Product ${uniqueSuffix}`,
         description: "A product for testing purposes",
         msrpPrice: 29.99,
         currentPrice: 19.99,
@@ -39,7 +32,6 @@ describe("CartItem Controller", () => {
     });
     testProductId = product.id;
 
-    // Create a cart for the test
     const cart = await prisma.cart.create({
       data: {
         user: {
@@ -50,7 +42,23 @@ describe("CartItem Controller", () => {
     testCartId = cart.id;
   });
 
+  beforeEach(async () => {
+    await prisma.cartItem.deleteMany({ where: { cartId: testCartId } });
+    await prisma.cartItem.create({
+      data: {
+        cart: { connect: { id: testCartId } },
+        product: { connect: { id: testProductId } },
+        cartQuantity: 2,
+        currentPrice: 19.99,
+      },
+    });
+  });
+
   afterAll(async () => {
+    await prisma.cartItem.deleteMany({});
+    await prisma.cart.deleteMany({});
+    await prisma.product.deleteMany({});
+    await prisma.user.deleteMany({});
     await prisma.$disconnect();
   });
 
@@ -58,8 +66,8 @@ describe("CartItem Controller", () => {
     const response = await request(app).post("/api/cart-items").send({
       cartId: testCartId,
       productId: testProductId,
-      variantId: null, // or some valid variant ID
-      sizeId: null, // or some valid size ID
+      variantId: null,
+      sizeId: null,
       cartQuantity: 1,
       currentPrice: 20.0,
     });

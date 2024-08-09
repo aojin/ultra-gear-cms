@@ -12,6 +12,10 @@ describe("Inventory Controller", () => {
     await prisma.product.deleteMany();
   });
 
+  afterEach(async () => {
+    await prisma.$executeRaw`ROLLBACK`;
+  });
+
   afterAll(async () => {
     await prisma.inventory.deleteMany();
     await prisma.size.deleteMany();

@@ -6,7 +6,7 @@ export const createCategory = async (data: {
   name: string;
   description?: string;
 }): Promise<Category> => {
-  if (data.name === "Uncategorized") {
+  if (data.name.startsWith("Uncategorized")) {
     throw new Error("Cannot create a category with the name 'Uncategorized'");
   }
 
@@ -64,7 +64,7 @@ export const updateCategory = async (
     throw new Error("Category not found");
   }
 
-  if (category.name === "Uncategorized") {
+  if (category.name.startsWith("Uncategorized")) {
     throw new Error("Cannot update the Uncategorized category");
   }
 
@@ -94,8 +94,8 @@ export const updateCategory = async (
 };
 
 export const deleteCategory = async (categoryId: number): Promise<void> => {
-  let uncategorizedCategory = await prisma.category.findUnique({
-    where: { name: "Uncategorized" },
+  let uncategorizedCategory = await prisma.category.findFirst({
+    where: { name: { startsWith: "Uncategorized" } },
   });
 
   if (!uncategorizedCategory) {

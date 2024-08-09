@@ -17,6 +17,10 @@ describe("OrderItem Controller", () => {
     await prisma.user.deleteMany();
   });
 
+  afterEach(async () => {
+    await prisma.$executeRaw`ROLLBACK`;
+  });
+
   afterAll(async () => {
     await prisma.$disconnect();
   });

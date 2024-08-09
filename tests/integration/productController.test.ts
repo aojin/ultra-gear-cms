@@ -5,6 +5,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 describe("Product Controller", () => {
+  afterEach(async () => {
+    await prisma.$executeRaw`ROLLBACK`;
+  });
+
   afterAll(async () => {
     await prisma.$disconnect();
   });

@@ -65,6 +65,10 @@ describe("Sale Controller", () => {
     promoCodeId = promoCode.id;
   });
 
+  afterEach(async () => {
+    await prisma.$executeRaw`ROLLBACK`;
+  });
+
   afterAll(async () => {
     await prisma.sale.deleteMany({});
     await prisma.productVariant.deleteMany({});
