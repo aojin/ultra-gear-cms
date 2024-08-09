@@ -92,9 +92,9 @@ export const archiveUserHandler = async (
   const { id } = req.params;
   try {
     const user = await archiveUser(parseInt(id, 10));
-    res.status(200).json(user); // Ensure proper status code
+    res.status(200).json(user);
   } catch (error: any) {
-    if (error.code === "P2025") {
+    if (error.message === "User not found") {
       res.status(404).json({ error: "User not found" });
     } else {
       res.status(500).json({ error: "An error occurred while archiving user" });
@@ -111,7 +111,7 @@ export const permanentlyDeleteUserHandler = async (
     await permanentlyDeleteUser(parseInt(id, 10));
     res.status(204).send();
   } catch (error: any) {
-    if (error.code === "P2025") {
+    if (error.message === "User not found") {
       res.status(404).json({ error: "User not found" });
     } else {
       res

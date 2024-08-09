@@ -87,6 +87,9 @@ export const archiveUser = async (id: number): Promise<User> => {
   } catch (error) {
     console.error("Service Error: Archiving User:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("User not found");
+      }
       throw new Error("Service Error: Known request error occurred");
     } else {
       throw new Error("Service Error: Failed to archive user");
@@ -102,6 +105,9 @@ export const permanentlyDeleteUser = async (id: number): Promise<void> => {
   } catch (error) {
     console.error("Service Error: Permanently Deleting User:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        throw new Error("User not found");
+      }
       throw new Error("Service Error: Known request error occurred");
     } else {
       throw new Error("Service Error: Failed to permanently delete user");

@@ -67,6 +67,14 @@ export const updateSubCategoryHandler = async (
   const { id } = req.params;
   const { name, description, categoryId } = req.body;
 
+  // Check for missing required fields
+  if (!name || !categoryId) {
+    res
+      .status(400)
+      .json({ error: "Missing required fields: name or categoryId" });
+    return;
+  }
+
   try {
     const subCategory = await updateSubCategory(
       parseInt(id, 10),
@@ -79,7 +87,7 @@ export const updateSubCategoryHandler = async (
     console.error("Error updating subcategory:", error);
     res
       .status(400)
-      .json({ error: "An error occured while updating subcategory" });
+      .json({ error: "An error occurred while updating subcategory" });
   }
 };
 
@@ -92,10 +100,14 @@ export const deleteSubCategoryHandler = async (
   try {
     await deleteSubCategory(parseInt(id, 10));
     res.status(204).end();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting subcategory:", error);
-    res
-      .status(400)
-      .json({ error: "An error occurred while deleting subcategory" });
+    if (error.message === "SubCategory not found") {
+      res.status(404).json({ error: "SubCategory not found" });
+    } else {
+      res
+        .status(400)
+        .json({ error: "An error occurred while deleting subcategory" });
+    }
   }
 };
